@@ -1,7 +1,7 @@
-import Discussion from "./discussion.mjs";
-import Media from "./media.mjs";
-import Post from "./post.mjs";
-import User from "./user.mjs";
+import Discussion from "./discussion.ts";
+import Media from "./media.ts";
+import Post from "./post.ts";
+import User from "./user.ts";
 
 Discussion.belongsTo(User);
 Discussion.hasMany(Post);
