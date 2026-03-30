@@ -92,15 +92,15 @@ export const initializePromise = (async (): Promise<void> => {
     ).map(memberToUser));
 
     // Bulk creation
-    await User.bulkCreate(appendUsers as any, {
+    await User.bulkCreate(appendUsers, {
         ignoreDuplicates: true,
     });
-    await Discussion.bulkCreate(appendThreads as any, {
+    await Discussion.bulkCreate(appendThreads, {
         ignoreDuplicates: true,
     });
-    await Post.bulkCreate(appendPosts as any, {
+    await Post.bulkCreate(appendPosts, {
         ignoreDuplicates: true,
-        include: [Media as any],
+        include: [Media],
     });
 })();
 
