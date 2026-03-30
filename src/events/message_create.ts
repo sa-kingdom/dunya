@@ -27,11 +27,6 @@ export default (): void => {
         const authorUser = await memberToUser(authorMember);
         await User.upsert(authorUser);
 
-        const messageMedia = Array.from(
-            message.attachments.values(),
-        ).map(attachmentToMedia);
-        await Media.bulkCreate(messageMedia, {ignoreDuplicates: true});
-
         await Post.create(messageToPost(message), { include: [Media] });
     });
 };
