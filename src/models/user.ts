@@ -1,6 +1,5 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
-import {writeFile, mkdir} from "node:fs/promises";
 import type {GuildMember} from "discord.js";
 import got from "got";
 
@@ -70,8 +69,7 @@ export async function memberToUser(member: GuildMember): Promise<{
             const targetDir = "assets/images";
             const targetPath = `${targetDir}/avatar-${userId}`;
             const buffer = await got(avatarUrl).buffer();
-            await mkdir(targetDir, { recursive: true });
-            await writeFile(targetPath, buffer);
+            await Bun.write(targetPath, buffer);
         } else {
             avatarHash = null;
         }
