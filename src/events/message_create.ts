@@ -32,6 +32,6 @@ export default (): void => {
         ).map(attachmentToMedia);
         await Media.bulkCreate(messageMedia as any, {ignoreDuplicates: true});
 
-        await Post.create(messageToPost(message) as any);
+        await Post.create(messageToPost(message) as any, { include: [Media] });
     });
 };

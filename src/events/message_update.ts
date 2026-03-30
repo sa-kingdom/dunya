@@ -13,6 +13,15 @@ export default (): void => {
             _oldMessage: Message | PartialMessage,
             newMessage: Message | PartialMessage,
         ) => {
+            if (newMessage.partial) {
+                try {
+                    newMessage = await newMessage.fetch();
+                } catch (error) {
+                    console.error("Failed to fetch partial message:", error);
+                    return;
+                }
+            }
+
             if (
                 !newMessage.guild ||
                 newMessage.guild.id !== guildId ||
