@@ -19,6 +19,6 @@ export default (): void => {
             return;
         }
 
-        await Discussion.create(threadToDiscussion(thread) as any);
+        await Discussion.create(threadToDiscussion(thread));
     });
 };

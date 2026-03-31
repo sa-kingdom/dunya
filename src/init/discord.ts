@@ -1,4 +1,4 @@
-import {Client, Partials, GatewayIntentBits, ForumChannel} from "discord.js";
+import {Client, Partials, GatewayIntentBits, ForumChannel, ChannelType} from "discord.js";
 import {getMust} from "../config.ts";
 import {Op} from "sequelize";
 import Discussion, {threadToDiscussion} from "../models/discussion.ts";
@@ -31,7 +31,10 @@ const channelIdForum = getMust("DISCORD_CHANNEL_ID_FORUM");
 export const initializePromise = (async (): Promise<void> => {
     await client.login(botToken);
 
-    const channel = await client.channels.fetch(channelIdForum) as ForumChannel;
+    const channel = await client.channels.fetch(channelIdForum);
+    if (!channel || channel.type !== ChannelType.GuildForum) {
+        throw new Error("Target channel is not a forum channel");
+    }
 
     // Threads
     const channelThreadActivated = await channel.threads.fetch();
@@ -89,15 +92,15 @@ export const initializePromise = (async (): Promise<void> => {
     ).map(memberToUser));
 
     // Bulk creation
-    await User.bulkCreate(appendUsers as any, {
+    await User.bulkCreate(appendUsers, {
         ignoreDuplicates: true,
     });
-    await Discussion.bulkCreate(appendThreads as any, {
+    await Discussion.bulkCreate(appendThreads, {
         ignoreDuplicates: true,
     });
-    await Post.bulkCreate(appendPosts as any, {
+    await Post.bulkCreate(appendPosts, {
         ignoreDuplicates: true,
-        include: [Media as any],
+        include: [Media],
     });
 })();
 

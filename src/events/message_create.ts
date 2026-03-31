@@ -25,13 +25,8 @@ export default (): void => {
 
         const authorMember = await message.guild.members.fetch(message.author.id);
         const authorUser = await memberToUser(authorMember);
-        await User.upsert(authorUser as any);
+        await User.upsert(authorUser);
 
-        const messageMedia = Array.from(
-            message.attachments.values(),
-        ).map(attachmentToMedia);
-        await Media.bulkCreate(messageMedia as any, {ignoreDuplicates: true});
-
-        await Post.create(messageToPost(message) as any);
+        await Post.create(messageToPost(message), { include: [Media] });
     });
 };
