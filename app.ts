@@ -1,28 +1,15 @@
 // Auto-load config
-import "./src/init/config.mjs";
+import "./src/init/config.ts";
 
 // Import modules
-import {
-    APP_NAME as appName,
-} from "./src/init/const.mjs";
-import {
-    getOverview,
-} from "./src/config.mjs";
-
-import {
-    initializePromise as initDiscord,
-    Events as discordEvents,
-} from "./src/init/discord.mjs";
-import {
-    initializePromise as initSequelize,
-} from "./src/init/sequelize.mjs";
-
-import {
-    camelToSnakeCase,
-} from "./src/utils/native.mjs";
+import {APP_NAME as appName} from "./src/init/const.ts";
+import {getOverview} from "./src/config.ts";
+import {initializePromise as initDiscord, Events as discordEvents} from "./src/init/discord.ts";
+import {initializePromise as initSequelize} from "./src/init/sequelize.ts";
+import {camelToSnakeCase} from "./src/utils/native.ts";
 
 // Define event names
-const eventNames = [
+const eventNames: string[] = [
     discordEvents.MessageCreate,
     discordEvents.MessageDelete,
     discordEvents.MessageUpdate,
@@ -32,20 +19,20 @@ const eventNames = [
 ];
 
 // Load events
-const loadEvents = (eventNames) => {
-    eventNames = eventNames.map(camelToSnakeCase);
+const loadEvents = (eventNames: string[]): void => {
+    const snakeNames = eventNames.map(camelToSnakeCase);
 
     const eventDirectory = new URL("src/events/", import.meta.url);
-    const eventFilenames = eventNames.map(
-        (n) => new URL(`${n}.mjs`, eventDirectory),
+    const eventFilenames = snakeNames.map(
+        (n) => new URL(`${n}.ts`, eventDirectory),
     );
 
-    const eventMappers = eventFilenames.map((n) => import(n));
+    const eventMappers = eventFilenames.map((n) => import(n.href));
     eventMappers.forEach((c) => c.then((f) => f.default()));
 };
 
 // Initialize and start bot
-(async () => {
+(async (): Promise<void> => {
     try {
         // Wait for Discord and Database initialization
         await Promise.all([

@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM oven/bun:1-alpine
 
 ENV RUNTIME_ENV container
 
@@ -11,16 +11,15 @@ RUN adduser -HD \
         -h /workplace \
         flandre
 
-RUN mkdir -p /.npm /workplace
+RUN mkdir -p /workplace
 WORKDIR /workplace
 ADD . /workplace
 
 RUN chown -R \
         3000:3000 \
-        /.npm /workplace
+        /workplace
 
 USER 3000
-RUN npm install
+RUN bun install
 
-EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["bun", "start"]

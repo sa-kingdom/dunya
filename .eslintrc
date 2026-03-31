@@ -1,11 +1,14 @@
 {
   "plugins": [
-      "jsdoc"
+      "jsdoc",
+      "@typescript-eslint"
   ],  
   "extends": [
     "eslint:recommended",
-    "google"
+    "google",
+    "plugin:@typescript-eslint/recommended"
   ],
+  "parser": "@typescript-eslint/parser",
   "rules": {
     "jsdoc/no-undefined-types": 1,
     "linebreak-style": 1,
@@ -16,7 +19,19 @@
     "quotes": [
       "error",
       "double"
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }],
+    "require-jsdoc": "off",
+    "valid-jsdoc": "off",
+    "max-len": ["error", {
+      "code": 100,
+      "ignoreUrls": true,
+      "ignoreStrings": true
+    }]
   },
   "env": {
     "es6": true,
@@ -25,6 +40,7 @@
   },
   "parserOptions": {
     "sourceType": "module",
-    "ecmaVersion": 2023
+    "ecmaVersion": 2023,
+    "project": "./tsconfig.json"
   }
 }

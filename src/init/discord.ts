@@ -1,18 +1,10 @@
-import {
-    Client,
-    Partials,
-    GatewayIntentBits,
-} from "discord.js";
-
-import {
-    getMust,
-} from "../config.mjs";
-
+import {Client, Partials, GatewayIntentBits, ForumChannel, ChannelType} from "discord.js";
+import {getMust} from "../config.ts";
 import {Op} from "sequelize";
-import Discussion, {threadToDiscussion} from "../models/discussion.mjs";
-import Post, {messageToPost} from "../models/post.mjs";
-import User, {memberToUser} from "../models/user.mjs";
-import Media from "../models/media.mjs";
+import Discussion, {threadToDiscussion} from "../models/discussion.ts";
+import Post, {messageToPost} from "../models/post.ts";
+import User, {memberToUser} from "../models/user.ts";
+import Media from "../models/media.ts";
 
 export {Events} from "discord.js";
 
@@ -36,10 +28,13 @@ const client = new Client({
 const botToken = getMust("DISCORD_BOT_TOKEN");
 const channelIdForum = getMust("DISCORD_CHANNEL_ID_FORUM");
 
-export const initializePromise = (async () => {
+export const initializePromise = (async (): Promise<void> => {
     await client.login(botToken);
 
     const channel = await client.channels.fetch(channelIdForum);
+    if (!channel || channel.type !== ChannelType.GuildForum) {
+        throw new Error("Target channel is not a forum channel");
+    }
 
     // Threads
     const channelThreadActivated = await channel.threads.fetch();
@@ -57,7 +52,7 @@ export const initializePromise = (async () => {
             id: {[Op.in]: remoteThreadIds},
         },
     });
-    const localThreadIds = localThreads.map(({id}) => id);
+    const localThreadIds = localThreads.map((t: any) => t.id);
     const appendThreadIds = remoteThreadIds.filter(
         (id) => !localThreadIds.includes(id),
     );
@@ -73,18 +68,19 @@ export const initializePromise = (async () => {
         (thread) => thread.messages.fetch(),
     ));
     const appendPosts = threadMessages.map(
-        (messages) => messages.map(messageToPost),
+        (messages) => Array.from(messages.values()).map(messageToPost),
     ).flat();
 
     // Users
     const remoteUserIds = Array.from(
         new Set(appendPosts.map(({userId}) => userId)),
     );
-    const localUserIds = await User.findAll({
+    const localUsers = await User.findAll({
         where: {
             id: {[Op.in]: remoteUserIds},
         },
     });
+    const localUserIds = localUsers.map((u: any) => u.id);
     const appendUserIds = remoteUserIds.filter(
         (id) => !localUserIds.includes(id),
     );
@@ -104,7 +100,8 @@ export const initializePromise = (async () => {
     });
     await Post.bulkCreate(appendPosts, {
         ignoreDuplicates: true,
-        include: Media,
+        include: [Media],
     });
 })();
-export const useClient = () => client;
+
+export const useClient = (): Client => client;

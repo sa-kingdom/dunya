@@ -1,11 +1,5 @@
-import {
-    Sequelize,
-} from "sequelize";
-
-import {
-    getMust,
-    isProduction,
-} from "../config.mjs";
+import {Sequelize} from "sequelize";
+import {getMust, isProduction} from "../config.ts";
 
 const sequelizeDbHost = getMust("SEQUELIZE_DB_HOST");
 const sequelizeDbPort = getMust("SEQUELIZE_DB_PORT");
@@ -19,15 +13,16 @@ const sequelize = new Sequelize(
     sequelizeDbPass,
     {
         host: sequelizeDbHost,
-        port: sequelizeDbPort,
+        port: parseInt(sequelizeDbPort),
         logging: !isProduction(),
         dialect: "mysql",
     },
 );
 
-export const initializePromise = (async () => {
-    await import("../models/index.mjs");
+export const initializePromise = (async (): Promise<void> => {
+    await import("../models/index.ts");
     await sequelize.authenticate();
     await sequelize.sync();
 })();
-export const useSequelize = () => sequelize;
+
+export const useSequelize = (): Sequelize => sequelize;

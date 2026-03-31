@@ -1,23 +1,27 @@
-import {
-    useSequelize,
-} from "../init/sequelize.mjs";
+import {useSequelize} from "../init/sequelize.ts";
+import {DataTypes, Model} from "sequelize";
+import type {Attachment} from "discord.js";
 
-import {
-    DataTypes,
-    Model,
-} from "sequelize";
-
-import discord from "discord.js";
-
-/**
- * Sequalise instance for database connection.
- */
 const sequelize = useSequelize();
 
 /**
- * Media
+ * Media Model
  */
-export default class Media extends Model { }
+export default class Media extends Model {
+    declare id: string;
+    declare name: string;
+    declare description: string | null;
+    declare contentType: string | null;
+    declare size: number;
+    declare url: string | null;
+    declare proxyUrl: string | null;
+    declare height: number | null;
+    declare width: number | null;
+    declare ephemeral: boolean | null;
+    declare duration: number | null;
+    declare waveform: string | null;
+}
+
 Media.init({
     id: {
         type: DataTypes.STRING,
@@ -76,12 +80,20 @@ Media.init({
     modelName: "media",
 });
 
-/**
- * Convert Discord's Attachment to Deter's Media
- * @param {discord.Attachment} attachment Discord's Attachment
- * @return {Object}
- */
-export function attachmentToMedia(attachment) {
+export function attachmentToMedia(attachment: Attachment): {
+    id: string;
+    name: string;
+    description: string | null;
+    contentType: string | null;
+    size: number;
+    url: string;
+    proxyUrl: string;
+    height: number | null;
+    width: number | null;
+    ephemeral: boolean | undefined;
+    duration: number | undefined;
+    waveform: string | undefined;
+} {
     const {
         id,
         name, description,

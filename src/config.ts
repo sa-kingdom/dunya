@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 /**
  * Load configs from system environment variables.
  */
-export function runLoader() {
+export function runLoader(): void {
     const dotenvPath = new URL("../.env", import.meta.url);
 
     const isDotEnvFileExists = existsSync(dotenvPath);
@@ -26,21 +26,15 @@ export function runLoader() {
 
 /**
  * Check is production mode.
- * @module config
- * @function
- * @return {boolean} true if production
  */
-export function isProduction() {
+export function isProduction(): boolean {
     return getMust("NODE_ENV") === "production";
 }
 
 /**
  * Get overview of current environment.
- * @module config
- * @function
- * @return {object}
  */
-export function getOverview() {
+export function getOverview(): { node: string; runtime: string } {
     return {
         node: getFallback("NODE_ENV", "development"),
         runtime: getFallback("RUNTIME_ENV", "native"),
@@ -49,35 +43,22 @@ export function getOverview() {
 
 /**
  * Shortcut to get config value.
- * @module config
- * @function
- * @param {string} key the key
- * @return {string} the value
  */
-export function get(key) {
+export function get(key: string): string | undefined {
     return process.env[key];
 }
 
 /**
  * Get the bool value from config, if yes, returns true.
- * @module config
- * @function
- * @param {string} key the key
- * @return {boolean} the bool value
  */
-export function getEnabled(key) {
+export function getEnabled(key: string): boolean {
     return getMust(key) === "yes";
 }
 
 /**
  * Get the array value from config.
- * @module config
- * @function
- * @param {string} key the key
- * @param {string} separator [separator=,] the separator.
- * @return {string[]} the array value
  */
-export function getSplited(key, separator = ",") {
+export function getSplited(key: string, separator = ","): string[] {
     return getMust(key)
         .split(separator)
         .map((s) => s.trim());
@@ -85,13 +66,8 @@ export function getSplited(key, separator = ",") {
 
 /**
  * Get the value from config with error thrown.
- * @module config
- * @function
- * @param {string} key the key
- * @return {string} the expected value
- * @throws {Error} if value is undefined, throw an error
  */
-export function getMust(key) {
+export function getMust(key: string): string {
     const value = get(key);
     if (value === undefined) {
         throw new Error(`config key ${key} is undefined`);
@@ -101,12 +77,7 @@ export function getMust(key) {
 
 /**
  * Get the value from config with fallback.
- * @module config
- * @function
- * @param {string} key the key
- * @param {string} fallback the fallback value
- * @return {string} the expected value
  */
-export function getFallback(key, fallback) {
+export function getFallback(key: string, fallback: string): string {
     return get(key) || fallback;
 }
