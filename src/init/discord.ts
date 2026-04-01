@@ -1,4 +1,4 @@
-import {Client, Partials, GatewayIntentBits, ForumChannel, ChannelType} from "discord.js";
+import {Client, Partials, GatewayIntentBits, ChannelType} from "discord.js";
 import {getMust} from "../config.ts";
 import {Op} from "sequelize";
 import Discussion, {threadToDiscussion} from "../models/discussion.ts";
