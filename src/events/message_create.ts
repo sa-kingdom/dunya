@@ -1,5 +1,6 @@
 import {Events, ChannelType, Message} from "discord.js";
 import {useClient} from "../init/discord.ts";
+import {agent} from "../agents/chat.ts";
 import {getMust} from "../config.ts";
 import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
@@ -9,24 +10,62 @@ import User, {memberToUser} from "../models/user.ts";
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
 
+async function syncMessage(message: Message): Promise<void> {
+    if (
+        !message.guild ||
+        message.guild.id !== guildId ||
+        message.channel.type !== ChannelType.PublicThread
+    ) {
+        return;
+    }
+
+    if (!await Discussion.findByPk(message.channel.id)) {
+        return;
+    }
+
+    const authorMember = await message.guild.members.fetch(message.author.id);
+    const authorUser = await memberToUser(authorMember);
+    await User.upsert(authorUser);
+
+    await Post.create(messageToPost(message), {include: [Media]});
+}
+
+async function replyMessage(message: Message): Promise<void> {
+    if (message.author.bot) return;
+
+    if (!client.user || !message.mentions.has(client.user)) {
+        return;
+    }
+
+    // Trigger typing indicator
+    await message.channel.sendTyping();
+
+    try {
+        const cleanContent = message.content.replace(new RegExp(`<@!?${client.user.id}>`, "g"), "").trim();
+
+        // Invoke the agent
+        const response = await agent.invoke(
+            {messages: [["user", cleanContent]]},
+            {configurable: {thread_id: message.channel.id}},
+        );
+
+        // Extract the latest AI message
+        const messages = response.messages;
+        const lastMessage = messages[messages.length - 1];
+
+        // Reply to the user
+        await message.reply(lastMessage.content as string);
+    } catch (error) {
+        console.error("Agent error:", error);
+        await message.reply("Oops, something went wrong while thinking! (>_<)");
+    }
+}
+
 export default (): void => {
     client.on(Events.MessageCreate, async (message: Message) => {
-        if (
-            !message.guild ||
-            message.guild.id !== guildId ||
-            message.channel.type !== ChannelType.PublicThread
-        ) {
-            return;
-        }
-
-        if (!await Discussion.findByPk(message.channel.id)) {
-            return;
-        }
-
-        const authorMember = await message.guild.members.fetch(message.author.id);
-        const authorUser = await memberToUser(authorMember);
-        await User.upsert(authorUser);
-
-        await Post.create(messageToPost(message), {include: [Media]});
+        await Promise.allSettled([
+            syncMessage(message),
+            replyMessage(message),
+        ]);
     });
 };
