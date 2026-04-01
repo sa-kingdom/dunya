@@ -69,3 +69,28 @@ export function sliceContent(
     flushCurrent();
     return snippets;
 }
+
+/**
+ * Composes a prompt by combining the given prompt with
+ * additional context information. The context is serialized
+ * as a JSON string and prefixed to the prompt,
+ * separated by a special delimiter.
+ * This allows the agent to have access to rich contextual
+ * information when processing the prompt, enabling it to
+ * generate more relevant and informed responses.
+ * @param prompt - The original prompt to be enhanced with context
+ * @param context - The additional context information to be included with the prompt
+ * @returns A new prompt string that includes the context information
+ * The context can include any relevant information
+ * about the current interaction, such as the user's identity,
+ * the conversation history, or any other metadata that might
+ * be useful for the agent to know when generating a response.
+ * By including this context in the prompt, the agent can
+ * better understand the user's intent and provide more
+ * accurate and personalized responses.
+ */
+export function toPromptWithContext(prompt: string, context: Record<string, string>): string {
+    return JSON.stringify({
+        context,
+    }) + "\x1e\n\n" + prompt;
+}
