@@ -4,10 +4,10 @@ import {createAgent, DynamicStructuredTool} from "langchain";
 import {ChatOpenAI} from "@langchain/openai";
 import {MemorySaver} from "@langchain/langgraph";
 
-import {getFallback} from "../config.ts";
+import {get, getFallback} from "../config.ts";
 
 import {
-    createCurrentDateTime,
+    createCurrentTimeTool,
     createDiscordGetGuilds,
     createDiscordGetTextChannels,
     createDiscordGetMessages,
@@ -15,6 +15,10 @@ import {
     createDiscordChannelSearch,
     createSoulReadTool,
     createSoulWriteTool,
+    createBrowserSearchTool,
+    createBrowserExtractTool,
+    createOpenWeatherMapTool,
+    createCodeExecutionTool,
 } from "./tools/index.ts";
 
 // Define the system prompt with a clear and authoritative persona for the agent
@@ -32,8 +36,8 @@ const model = new ChatOpenAI({
 });
 
 // Define tools for agent capabilities
-const tools: DynamicStructuredTool[] = [
-    createCurrentDateTime(),
+const toolsArray = [
+    createCurrentTimeTool(),
     createDiscordGetGuilds(),
     createDiscordGetTextChannels(),
     createDiscordGetMessages(),
@@ -41,7 +45,14 @@ const tools: DynamicStructuredTool[] = [
     createDiscordChannelSearch(),
     createSoulReadTool(),
     createSoulWriteTool(),
+    createBrowserSearchTool(get("TAVILY_API_KEY")),
+    createBrowserExtractTool(get("TAVILY_API_KEY")),
+    createOpenWeatherMapTool(get("OPENWEATHER_API_KEY")),
+    createCodeExecutionTool(),
 ];
+
+// Define tools for agent capabilities
+const tools: DynamicStructuredTool[] | any[] = toolsArray.filter(Boolean);
 
 // Create the production-ready ReAct agent using the modern createAgent factory
 export const agent = createAgent({
