@@ -83,7 +83,7 @@ async function replyMessage(message: Message): Promise<void> {
         const config = {configurable: {thread_id: message.channel.id}};
 
         // Get the current state to know how many messages existed before this turn
-        const initialState = await agent.getState(config) as any;
+        const initialState = await agent.graph.getState(config);
         const initialMessagesCount = initialState.values?.messages?.length || 0;
 
         // Run the ReAct agent
