@@ -2,6 +2,7 @@ import {Events, ChannelType, Message, GuildMember} from "discord.js";
 import {useClient} from "../init/discord.ts";
 import {agent} from "../agents/chat.ts";
 import {getMust} from "../config.ts";
+import {sliceContent} from "../utils/text.ts";
 import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
@@ -41,12 +42,13 @@ async function replyMessage(message: Message): Promise<void> {
         return;
     }
 
+    const cleanContent = message.content.replace(new RegExp(`<@!?${client.user.id}>`, "g"), "").trim();
+    if (!cleanContent) return;
+
     // Trigger typing indicator
     await message.channel.sendTyping();
 
     try {
-        const cleanContent = message.content.replace(new RegExp(`<@!?${client.user.id}>`, "g"), "").trim();
-
         // Invoke the agent
         const response = await agent.invoke(
             {messages: [["user", cleanContent]]},
@@ -61,8 +63,16 @@ async function replyMessage(message: Message): Promise<void> {
             throw new Error("Agent returned an empty or invalid response");
         }
 
-        // Reply to the user
-        await message.reply(lastMessage.content as string);
+        // Reply to the user, slicing into snippets if too long (2000 chars limit on Discord)
+        const responseText = lastMessage.content as string;
+        const snippets = sliceContent(responseText, 1900);
+        if (snippets.length > 0) {
+            const firstSnippet = snippets.shift();
+            await message.reply(firstSnippet || "No response content.");
+        }
+        for (const snippet of snippets) {
+            await message.channel.send(snippet);
+        }
     } catch (error) {
         console.error("Agent error:", error);
         await message.reply("Oops, something went wrong while thinking! (>_<)");
