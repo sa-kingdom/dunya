@@ -13,6 +13,8 @@ import {
     createDiscordGetMessages,
     createDiscordSendMessages,
     createDiscordChannelSearch,
+    createSoulReadTool,
+    createSoulWriteTool,
 } from "./tools/index.ts";
 
 // Define the system prompt with a clear and authoritative persona for the agent
@@ -37,6 +39,8 @@ const tools: DynamicStructuredTool[] = [
     createDiscordGetMessages(),
     createDiscordSendMessages(),
     createDiscordChannelSearch(),
+    createSoulReadTool(),
+    createSoulWriteTool(),
 ];
 
 // Create the production-ready ReAct agent using the modern createAgent factory
