@@ -274,7 +274,7 @@ export function createCodeExecutionTool(): StructuredToolInterface {
                 code: z.string().describe(
                     "The JavaScript code to execute. Return a value or use console.log() to see output.",
                 ),
-                timeoutMs: z.number().nullable().default(DEFAULT_TIMEOUT_MS).describe(
+                timeoutMs: z.number().max(30000).nullable().default(DEFAULT_TIMEOUT_MS).describe(
                     "Maximum execution time in milliseconds. " +
                     `Default: ${DEFAULT_TIMEOUT_MS}ms, Max: 30000ms.`,
                 ),

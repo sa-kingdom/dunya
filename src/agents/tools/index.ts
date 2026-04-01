@@ -1,5 +1,12 @@
 export {createCurrentTimeTool} from "./current-datetime.ts";
-export {createSoulReadTool, createSoulWriteTool} from "./soul.ts";
+export {
+    createSoulReadTool,
+    createSoulWriteTool,
+    createSoulAppendTool,
+    createSoulFindTool,
+    createSoulReplaceTool,
+    createSoulClearTool,
+} from "./soul.ts";
 export {createBrowserSearchTool} from "./browserSearch.ts";
 export {createBrowserExtractTool} from "./browserExtract.ts";
 export {createOpenWeatherMapTool} from "./openWeatherMap.ts";

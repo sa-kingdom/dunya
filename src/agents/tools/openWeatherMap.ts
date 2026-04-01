@@ -3,31 +3,14 @@ import {z} from "zod";
 import {
     tool,
 } from "@langchain/core/tools";
-import type {StructuredToolInterface} from "@langchain/core/tools";
+import type {
+    StructuredToolInterface,
+} from "@langchain/core/tools";
 
 import {
     OpenWeatherAPI,
+    type CurrentWeather,
 } from "openweather-api-node";
-
-type WeatherObservation = {
-  dt?: string | number;
-  weather?: {
-    description?: string;
-    wind?: {
-      speed?: number;
-      deg?: number;
-    };
-    humidity?: number;
-    temp?: {
-      cur?: number;
-    };
-    feelsLike?: {
-      cur?: number;
-    };
-    rain?: number | string;
-    clouds?: number;
-  };
-};
 
 /**
  * Format weather information for presentation.
@@ -37,18 +20,10 @@ type WeatherObservation = {
  */
 function formatWeatherInfo(
     locationName: string,
-    observation: WeatherObservation,
+    observation: CurrentWeather,
 ): string {
-    const {dt, weather} = observation ?? {};
-    const {
-        description,
-        wind = {},
-        humidity,
-        temp = {},
-        feelsLike = {},
-        rain,
-        clouds,
-    } = weather ?? {};
+    const {dt, weather} = observation;
+    const {description, temp, feelsLike, humidity, wind, rain, clouds} = weather;
 
     return [
         `In ${locationName}, the latest report of weather is as follows:`,
@@ -106,7 +81,7 @@ export function createOpenWeatherMapTool(
                     units: "metric",
                     locationName: normalizedLocation,
                 });
-                const observation = await client.getCurrent() as unknown as WeatherObservation;
+                const observation = await client.getCurrent();
                 return formatWeatherInfo(normalizedLocation, observation);
             } catch (error) {
                 console.error("Error fetching weather data:", error);
