@@ -25,6 +25,7 @@ export function createBrowserExtractTool(
 
     return tool(
         async ({urls}) => {
+            console.info("[tool] browser_extract", {urls});
             try {
                 const extractResponse = await tvly.extract(urls);
                 return extractResponse.results

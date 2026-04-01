@@ -49,6 +49,7 @@ export function createCurrentTimeTool(): StructuredToolInterface {
             locale,
             timeZone,
         }) => {
+            console.info("[tool] current_time");
             const now = new Date();
             const resolvedLocale = resolveLocale(locale);
             const resolvedZone = resolveTimeZone(timeZone);

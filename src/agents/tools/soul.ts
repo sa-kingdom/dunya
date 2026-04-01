@@ -11,6 +11,7 @@ export function createSoulReadTool(): DynamicStructuredTool {
             reason: z.string().optional().describe("Reason for reading your soul"),
         }),
         func: async () => {
+            console.info("[tool] ReadSoul");
             const soulId = getMust("SOUL_ID");
 
             const soul = await Soul.findByPk(soulId);
@@ -30,6 +31,7 @@ export function createSoulWriteTool(): DynamicStructuredTool {
             content: z.string().describe("The new content to write to your soul. Max 300 characters."),
         }),
         func: async ({content}: { content: string }) => {
+            console.info("[tool] WriteSoul");
             const soulId = getMust("SOUL_ID");
 
             let finalContent = content;

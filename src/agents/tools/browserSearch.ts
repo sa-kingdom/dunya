@@ -25,6 +25,7 @@ export function createBrowserSearchTool(
 
     return tool(
         async ({query}) => {
+            console.info("[tool] browser_search", {query});
             try {
                 const searchResponse = await tvly.search(query, {
                     searchDepth: "advanced",

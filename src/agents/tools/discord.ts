@@ -17,6 +17,7 @@ export function createDiscordGetGuilds(): DynamicStructuredTool {
         description: "Get a list of all Discord servers (guilds) the bot is a member of.",
         schema: z.object({}).optional(),
         func: async () => {
+            console.info("[tool] discord_get_guilds");
             try {
                 const client = useClient();
                 const guilds = await client.guilds.fetch();
@@ -42,6 +43,7 @@ export function createDiscordGetTextChannels(): DynamicStructuredTool {
             guildId: z.string().describe("The ID of the Discord server (guild)"),
         }),
         func: async ({guildId}) => {
+            console.info("[tool] discord_get_text_channels", {guildId});
             try {
                 const client = useClient();
                 const guild = await client.guilds.fetch(guildId);
@@ -72,6 +74,7 @@ export function createDiscordGetMessages(): DynamicStructuredTool {
             limit: z.number().optional().default(10).describe("Number of messages to retrieve"),
         }),
         func: async ({channelId, limit = 10}) => {
+            console.info("[tool] discord_get_messages", {channelId, limit});
             try {
                 const client = useClient();
                 const channel = await client.channels.fetch(channelId);
@@ -104,6 +107,7 @@ export function createDiscordSendMessages(): DynamicStructuredTool {
             message: z.string().describe("The message content to send"),
         }),
         func: async ({channelId, message}) => {
+            console.info("[tool] discord_send_messages", {channelId});
             try {
                 const client = useClient();
                 const channel = await client.channels.fetch(channelId);
@@ -135,6 +139,7 @@ export function createDiscordChannelSearch(): DynamicStructuredTool {
             limit: z.number().optional().default(10).describe("Max results to return"),
         }),
         func: async ({channelId, query, limit = 50}) => {
+            console.info("[tool] discord_channel_search", {channelId, query});
             try {
                 const client = useClient();
                 const channel = await client.channels.fetch(channelId);

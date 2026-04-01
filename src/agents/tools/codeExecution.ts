@@ -238,7 +238,8 @@ function formatResult(result: ExecutionResult): string {
 export function createCodeExecutionTool(): StructuredToolInterface {
     return tool(
         async ({code, timeoutMs}) => {
-        // Validate the code isn't empty.
+            console.info("[tool] code_execution");
+            // Validate the code isn't empty.
             if (!code || code.trim().length === 0) {
                 return "Error: No code provided to execute.";
             }

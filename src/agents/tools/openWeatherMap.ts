@@ -95,6 +95,7 @@ export function createOpenWeatherMapTool(
 
     return tool(
         async ({location}: { location?: string | null }) => {
+            console.info("[tool] open_weather", {location});
             try {
                 const normalizedLocation = await normalizeLocation(
                     apiKey,
