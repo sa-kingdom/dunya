@@ -129,14 +129,14 @@ export function createSoulReplaceTool() {
             try {
                 const regex = new RegExp(pattern, "g");
                 const newContent = soul.content.replace(regex, replacement);
-                const {content: finalContent} = limitContent(newContent);
+                const {content: finalContent, truncated} = limitContent(newContent);
 
                 await Soul.upsert({
                     id: soulId,
                     content: finalContent,
                 });
 
-                return "Soul content replaced successfully.";
+                return `Soul content replaced successfully.${truncated ? " (Truncated to 300 characters)" : ""}`;
             } catch (error) {
                 console.error("[tool] soul_replace error:", (error as Error).message);
                 return `Replacement failed: ${(error as Error).message}`;
