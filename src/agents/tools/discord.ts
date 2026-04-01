@@ -15,7 +15,7 @@ export function createDiscordGetGuilds(): DynamicStructuredTool {
     return new DynamicStructuredTool({
         name: "discord_get_guilds",
         description: "Get a list of all Discord servers (guilds) the bot is a member of.",
-        schema: z.object({}).optional(),
+        schema: z.object({}),
         func: async () => {
             console.info("[tool] discord_get_guilds");
             try {
@@ -71,7 +71,7 @@ export function createDiscordGetMessages(): DynamicStructuredTool {
         description: "Get recent messages from a specific Discord channel.",
         schema: z.object({
             channelId: z.string().describe("The ID of the Discord channel"),
-            limit: z.number().optional().default(10).describe("Number of messages to retrieve"),
+            limit: z.number().nullable().default(10).describe("Number of messages to retrieve"),
         }),
         func: async ({channelId, limit = 10}) => {
             console.info("[tool] discord_get_messages", {channelId, limit});
@@ -136,7 +136,7 @@ export function createDiscordChannelSearch(): DynamicStructuredTool {
         schema: z.object({
             channelId: z.string().describe("The ID of the Discord channel"),
             query: z.string().describe("The text to search for"),
-            limit: z.number().optional().default(10).describe("Max results to return"),
+            limit: z.number().nullable().default(10).describe("Max results to return"),
         }),
         func: async ({channelId, query, limit = 50}) => {
             console.info("[tool] discord_channel_search", {channelId, query});
