@@ -90,9 +90,9 @@ export function attachmentToMedia(attachment: Attachment): {
     proxyUrl: string;
     height: number | null;
     width: number | null;
-    ephemeral: boolean | undefined;
-    duration: number | undefined;
-    waveform: string | undefined;
+    ephemeral: boolean | null;
+    duration: number | null;
+    waveform: string | null;
 } {
     const {
         id,

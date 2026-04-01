@@ -6,7 +6,7 @@
     "lib": ["ES2022"],
     "allowJs": true,
     "checkJs": false,
-    "strict": false,
+    "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

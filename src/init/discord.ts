@@ -52,7 +52,7 @@ export const initializePromise = (async (): Promise<void> => {
             id: {[Op.in]: remoteThreadIds},
         },
     });
-    const localThreadIds = localThreads.map((t: any) => t.id);
+    const localThreadIds = localThreads.map((t) => t.id);
     const appendThreadIds = remoteThreadIds.filter(
         (id) => !localThreadIds.includes(id),
     );
@@ -80,7 +80,7 @@ export const initializePromise = (async (): Promise<void> => {
             id: {[Op.in]: remoteUserIds},
         },
     });
-    const localUserIds = localUsers.map((u: any) => u.id);
+    const localUserIds = localUsers.map((u) => u.id);
     const appendUserIds = remoteUserIds.filter(
         (id) => !localUserIds.includes(id),
     );

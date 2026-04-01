@@ -1,6 +1,6 @@
 import {readFileSync} from "node:fs";
 
-import {createAgent} from "langchain";
+import {createAgent, DynamicStructuredTool} from "langchain";
 import {ChatOpenAI} from "@langchain/openai";
 import {MemorySaver} from "@langchain/langgraph";
 
@@ -21,7 +21,7 @@ const model = new ChatOpenAI({
 });
 
 // Define tools for agent capabilities
-const tools = [];
+const tools: DynamicStructuredTool[] = [];
 
 // Create the production-ready ReAct agent using the modern createAgent factory
 export const agent = createAgent({
