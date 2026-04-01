@@ -2,7 +2,7 @@ import {Events, ChannelType, Message, GuildMember} from "discord.js";
 import {useClient} from "../init/discord.ts";
 import {agent} from "../agents/chat.ts";
 import {getMust} from "../config.ts";
-import {sliceContent} from "../utils/text.ts";
+import {sliceContent, toPromptWithContext} from "../utils/text.ts";
 import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
@@ -48,25 +48,63 @@ async function replyMessage(message: Message): Promise<void> {
     if (!cleanContent) return;
 
     // Trigger typing indicator
-    await message.channel.sendTyping();
+    if ("sendTyping" in message.channel) {
+        await message.channel.sendTyping();
+    }
+
+    // Gather context about the message and the author to provide to the agent
+    const context: Record<string, string> = {
+        guildId: message.guildId || "(none)",
+        channelId: message.channelId,
+        channelLocale: message.guild?.preferredLocale || "zh-TW",
+        authorId: message.author.id,
+        authorName:
+            message.member?.nickname ||
+            message.member?.displayName ||
+            message.author.username,
+        authorUsername: message.author.username,
+        referMessageId: message.id,
+    };
+    if (message.reference) {
+        try {
+            const referencedMessage = await message.fetchReference();
+            context.referencedMessageAuthorName = referencedMessage.author.username;
+            context.referencedMessageContent = referencedMessage.content;
+        } catch (error) {
+            console.warn("Failed to fetch referenced message:", error);
+        }
+    }
+
+    // Compose the prompt with additional context
+    const promptWithContext = toPromptWithContext(cleanContent, context);
 
     try {
-        // Invoke the agent
-        const response = await agent.invoke(
-            {messages: [["user", cleanContent]]},
-            {configurable: {thread_id: message.channel.id}},
+        // Configuration for the agent's state management
+        const config = {configurable: {thread_id: message.channel.id}};
+
+        // Get the current state to know how many messages existed before this turn
+        const initialState = await agent.graph.getState(config);
+        const initialMessagesCount = initialState.values?.messages?.length || 0;
+
+        // Run the ReAct agent
+        const result = await agent.invoke(
+            {messages: [{role: "user", content: promptWithContext}]},
+            config,
         );
 
-        // Extract the latest AI message
-        const messages = response.messages;
-        const lastMessage = messages[messages.length - 1];
+        // Filter messages that were generated in this turn
+        const newMessages = result.messages.slice(initialMessagesCount);
 
-        if (!lastMessage?.content) {
-            throw new Error("Agent returned an empty or invalid response");
+        let responseText = "";
+
+        for (const msg of newMessages) {
+            const type = msg.type;
+            if (type === "ai" && msg.content) {
+                responseText = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+            }
         }
 
         // Reply to the user, slicing into snippets if too long (2000 chars limit on Discord)
-        const responseText = lastMessage.content as string;
         const snippets = sliceContent(responseText, 1900);
         if (snippets.length > 0) {
             const firstSnippet = snippets.shift();

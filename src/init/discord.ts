@@ -1,4 +1,11 @@
-import {Client, Partials, GatewayIntentBits, ChannelType} from "discord.js";
+import {
+    Client,
+    Partials,
+    GatewayIntentBits,
+    ChannelType,
+    PresenceUpdateStatus,
+    ActivityType,
+} from "discord.js";
 import {getMust} from "../config.ts";
 import {Op} from "sequelize";
 import Discussion, {threadToDiscussion} from "../models/discussion.ts";
@@ -23,6 +30,13 @@ const client = new Client({
         GatewayIntentBits.DirectMessageTyping,
         GatewayIntentBits.MessageContent,
     ],
+    presence: {
+        status: PresenceUpdateStatus.Idle,
+        activities: [{
+            type: ActivityType.Listening,
+            name: "Radiant Heart",
+        }],
+    },
 });
 
 const botToken = getMust("DISCORD_BOT_TOKEN");
