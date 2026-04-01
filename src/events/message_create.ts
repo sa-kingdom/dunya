@@ -1,4 +1,4 @@
-import {Events, ChannelType, Message} from "discord.js";
+import {Events, ChannelType, Message, GuildMember} from "discord.js";
 import {useClient} from "../init/discord.ts";
 import {agent} from "../agents/chat.ts";
 import {getMust} from "../config.ts";
@@ -11,23 +11,27 @@ const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
 
 async function syncMessage(message: Message): Promise<void> {
-    if (
-        !message.guild ||
-        message.guild.id !== guildId ||
-        message.channel.type !== ChannelType.PublicThread
-    ) {
-        return;
+    try {
+        if (
+            !message.guild ||
+            message.guild.id !== guildId ||
+            message.channel.type !== ChannelType.PublicThread
+        ) {
+            return;
+        }
+
+        if (!await Discussion.findByPk(message.channel.id)) {
+            return;
+        }
+
+        const authorMember = message.member || await message.guild.members.fetch(message.author.id);
+        const authorUser = await memberToUser(authorMember as GuildMember);
+        await User.upsert(authorUser);
+
+        await Post.create(messageToPost(message), {include: [Media]});
+    } catch (error) {
+        console.error("Failed to sync message:", error);
     }
-
-    if (!await Discussion.findByPk(message.channel.id)) {
-        return;
-    }
-
-    const authorMember = await message.guild.members.fetch(message.author.id);
-    const authorUser = await memberToUser(authorMember);
-    await User.upsert(authorUser);
-
-    await Post.create(messageToPost(message), {include: [Media]});
 }
 
 async function replyMessage(message: Message): Promise<void> {
@@ -52,6 +56,10 @@ async function replyMessage(message: Message): Promise<void> {
         // Extract the latest AI message
         const messages = response.messages;
         const lastMessage = messages[messages.length - 1];
+
+        if (!lastMessage?.content) {
+            throw new Error("Agent returned an empty or invalid response");
+        }
 
         // Reply to the user
         await message.reply(lastMessage.content as string);
