@@ -41,6 +41,11 @@ function toAvatarUrl(userId: string, avatarHash: string | null): string | null {
 async function downloadAvatar(userId: string, avatarUrl: string): Promise<void> {
     const targetDir = "assets/images";
     const targetPath = `${targetDir}/avatar-${userId}`;
+
+    if (await Bun.file(targetPath).exists()) {
+        return;
+    }
+
     const buffer = await got(avatarUrl).buffer();
     const {mkdir} = await import("node:fs/promises");
     await mkdir(targetDir, {recursive: true});
