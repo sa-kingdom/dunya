@@ -11,6 +11,7 @@ export function createSoulReadTool(): DynamicStructuredTool {
             reason: z.string().optional().describe("Reason for reading your soul"),
         }),
         func: async () => {
+            console.info("[tool] ReadSoul");
             const soulId = getMust("SOUL_ID");
 
             const soul = await Soul.findByPk(soulId);
@@ -25,19 +26,28 @@ export function createSoulReadTool(): DynamicStructuredTool {
 export function createSoulWriteTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
         name: "WriteSoul",
-        description: "Updates the content of your own SOUL_ID to remember important things.",
+        description: "Updates the content of your own SOUL_ID to remember important things. Note: The maximum length is 300 characters.",
         schema: z.object({
-            content: z.string().describe("The new content to write to your soul."),
+            content: z.string().describe("The new content to write to your soul. Max 300 characters."),
         }),
         func: async ({content}: { content: string }) => {
+            console.info("[tool] WriteSoul");
             const soulId = getMust("SOUL_ID");
+
+            let finalContent = content;
+            let warningMessage = "";
+
+            if (content.length > 300) {
+                finalContent = content.substring(0, 300);
+                warningMessage = " Warning: Your content exceeded the 300 character limit and was truncated.";
+            }
 
             await Soul.upsert({
                 id: soulId,
-                content,
+                content: finalContent,
             });
 
-            return "Successfully updated your soul content.";
+            return `Successfully updated your soul content.${warningMessage}`;
         },
     });
 }

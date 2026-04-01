@@ -1,34 +1,89 @@
-import {DynamicStructuredTool} from "langchain";
 import {z} from "zod";
 
-import dayjs from "dayjs";
-import dayjsUtc from "dayjs/plugin/utc.js";
-import dayjsTimezone from "dayjs/plugin/timezone.js";
+import {
+    tool,
+} from "@langchain/core/tools";
+import type {StructuredToolInterface} from "@langchain/core/tools";
 
-dayjs.extend(dayjsUtc);
-dayjs.extend(dayjsTimezone);
+const LOCAL_TIME_ZONE = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+const DEFAULT_LOCALE = "zh-TW";
+const FALLBACK_LOCALE = "en-US";
 
-const TIME_FORMAT = [
-    "[In time zone ]Z[, the date of today and current time are as follow:]",
-    "[Date Year: ]YYYY",
-    "[Date Month: ]MM",
-    "[Date Day: ]DD",
-    "[Week Day: ]dddd",
-    "[Time Hour: ]HH",
-    "[Time Minute: ]mm",
-    "[Time Second: ]ss",
-].join("\n");
+/**
+ * Normalize user-specified locale strings into valid Intl locales.
+ * @param maybeLocale - Optional locale provided by the user.
+ * @returns The resolved locale identifier.
+ */
+function resolveLocale(maybeLocale?: string | null): string {
+    const targetLocale = maybeLocale?.trim() || DEFAULT_LOCALE;
+    try {
+        return new Intl.DateTimeFormat(targetLocale).resolvedOptions().locale;
+    } catch {
+        return new Intl.DateTimeFormat(FALLBACK_LOCALE)
+            .resolvedOptions().locale;
+    }
+}
 
-export function createCurrentDateTime(): DynamicStructuredTool {
-    return new DynamicStructuredTool({
-        name: "CurrentDateTime",
-        description: "Returns the current date and time.",
-        schema: z.object({
-            input: z.string().describe("time zone").default("Asia/Taipei"),
-        }),
-        func: async ({input}: { input: string }) => {
-            const tz = input || "Asia/Taipei";
-            return dayjs.tz(dayjs(), tz).format(TIME_FORMAT);
+/**
+ * Normalize user-specified timezone strings into valid IANA zones.
+ * @param maybeZone - Optional timezone provided by the user.
+ * @returns The resolved timezone identifier.
+ */
+function resolveTimeZone(maybeZone?: string | null): string {
+    const targetZone = maybeZone?.trim() || LOCAL_TIME_ZONE;
+    try {
+        return new Intl.DateTimeFormat("en-US", {timeZone: targetZone})
+            .resolvedOptions().timeZone;
+    } catch {
+        return LOCAL_TIME_ZONE;
+    }
+}
+
+/**
+ * Factory that creates the current time tool definition.
+ * @returns The configured time tool.
+ */
+export function createCurrentTimeTool(): StructuredToolInterface {
+    return tool(
+        async ({
+            locale,
+            timeZone,
+        }) => {
+            console.info("[tool] current_time");
+            const now = new Date();
+            const resolvedLocale = resolveLocale(locale);
+            const resolvedZone = resolveTimeZone(timeZone);
+            const formatter = new Intl.DateTimeFormat(resolvedLocale, {
+                dateStyle: "full",
+                timeStyle: "long",
+                timeZone: resolvedZone,
+            });
+
+            return JSON.stringify({
+                iso: now.toISOString(),
+                epochMs: now.getTime(),
+                formatted: formatter.format(now),
+                locale: resolvedLocale,
+                timeZone: resolvedZone,
+            });
         },
-    });
+        {
+            name: "current_time",
+            description:
+          "Retrieves the current date and time. Use before " +
+          "referencing schedules, deadlines, or timestamps.",
+            schema: z.object({
+                locale: z
+                    .string()
+                    .nullable()
+                    .default("zh-TW")
+                    .describe("BCP-47 locale tag, e.g. zh-TW or en-US."),
+                timeZone: z
+                    .string()
+                    .nullable()
+                    .default("Asia/Taipei")
+                    .describe("IANA timezone, e.g. Asia/Taipei."),
+            }),
+        },
+    );
 }

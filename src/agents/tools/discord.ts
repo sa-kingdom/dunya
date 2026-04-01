@@ -17,11 +17,13 @@ export function createDiscordGetGuilds(): DynamicStructuredTool {
         description: "Get a list of all Discord servers (guilds) the bot is a member of.",
         schema: z.object({}).optional(),
         func: async () => {
+            console.info("[tool] discord_get_guilds");
             try {
                 const client = useClient();
                 const guilds = await client.guilds.fetch();
                 return guilds.map((g) => `ID: ${g.id}, Name: ${g.name}`).join("\n") || "No guilds found.";
             } catch (error: unknown) {
+                console.error("discord_get_guilds failed:", error);
                 return `Failed to get guilds: ${
                     error instanceof Error ? error.message : String(error)
                 }`;
@@ -41,6 +43,7 @@ export function createDiscordGetTextChannels(): DynamicStructuredTool {
             guildId: z.string().describe("The ID of the Discord server (guild)"),
         }),
         func: async ({guildId}) => {
+            console.info("[tool] discord_get_text_channels", {guildId});
             try {
                 const client = useClient();
                 const guild = await client.guilds.fetch(guildId);
@@ -50,6 +53,7 @@ export function createDiscordGetTextChannels(): DynamicStructuredTool {
                     .map((c) => `ID: ${c?.id}, Name: ${c?.name}`)
                     .join("\n") || "No text channels found.";
             } catch (error: unknown) {
+                console.error("discord_get_text_channels failed:", error);
                 return `Failed to get text channels: ${
                     error instanceof Error ? error.message : String(error)
                 }`;
@@ -70,6 +74,7 @@ export function createDiscordGetMessages(): DynamicStructuredTool {
             limit: z.number().optional().default(10).describe("Number of messages to retrieve"),
         }),
         func: async ({channelId, limit = 10}) => {
+            console.info("[tool] discord_get_messages", {channelId, limit});
             try {
                 const client = useClient();
                 const channel = await client.channels.fetch(channelId);
@@ -81,6 +86,7 @@ export function createDiscordGetMessages(): DynamicStructuredTool {
                     .map((m) => `${m.author.tag} (${m.createdAt.toLocaleString()}): ${m.content}`)
                     .join("\n") || "No messages found.";
             } catch (error: unknown) {
+                console.error("discord_get_messages failed:", error);
                 return `Failed to get messages: ${
                     error instanceof Error ? error.message : String(error)
                 }`;
@@ -101,6 +107,7 @@ export function createDiscordSendMessages(): DynamicStructuredTool {
             message: z.string().describe("The message content to send"),
         }),
         func: async ({channelId, message}) => {
+            console.info("[tool] discord_send_messages", {channelId});
             try {
                 const client = useClient();
                 const channel = await client.channels.fetch(channelId);
@@ -110,6 +117,7 @@ export function createDiscordSendMessages(): DynamicStructuredTool {
                 const sent = await (channel as TextChannel).send(message);
                 return `Message sent successfully. Message ID: ${sent.id}`;
             } catch (error: unknown) {
+                console.error("discord_send_messages failed:", error);
                 return `Failed to send message: ${
                     error instanceof Error ? error.message : String(error)
                 }`;
@@ -131,6 +139,7 @@ export function createDiscordChannelSearch(): DynamicStructuredTool {
             limit: z.number().optional().default(10).describe("Max results to return"),
         }),
         func: async ({channelId, query, limit = 50}) => {
+            console.info("[tool] discord_channel_search", {channelId, query});
             try {
                 const client = useClient();
                 const channel = await client.channels.fetch(channelId);
@@ -145,6 +154,7 @@ export function createDiscordChannelSearch(): DynamicStructuredTool {
                     .map((m) => `${m.author.tag} (${m.createdAt.toLocaleString()}): ${m.content}`)
                     .join("\n") || `No messages matching "${query}" found in the last 100 messages.`;
             } catch (error: unknown) {
+                console.error("discord_channel_search failed:", error);
                 return `Search failed: ${error instanceof Error ? error.message : String(error)}`;
             }
         },
