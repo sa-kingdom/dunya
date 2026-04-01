@@ -7,9 +7,21 @@ import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
 import User, {memberToUser} from "../models/user.ts";
+import Soul from "../models/soul.ts";
 
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
+
+async function readSoul(): Promise<string> {
+    try {
+        const soulId = getMust("SOUL_ID");
+        const soul = await Soul.findByPk(soulId);
+        return soul?.content || "(empty)";
+    } catch (error) {
+        console.error("Failed to read soul:", error);
+        return "(unavailable)";
+    }
+}
 
 async function syncMessage(message: Message): Promise<void> {
     try {
@@ -54,6 +66,7 @@ async function replyMessage(message: Message): Promise<void> {
 
     // Gather context about the message and the author to provide to the agent
     const context: Record<string, string> = {
+        yourSoul: await readSoul(),
         guildId: message.guildId || "(none)",
         channelId: message.channelId,
         channelLocale: message.guild?.preferredLocale || "zh-TW",
