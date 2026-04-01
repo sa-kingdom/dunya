@@ -19,8 +19,8 @@ export function sliceContent(
 
     // Helper: flush current buffer into snippets
     const flushCurrent = () => {
-        if (!current) return;
-        snippets.push(current.trim());
+        const trimmed = current.trim();
+        if (trimmed) snippets.push(trimmed);
         current = "";
     };
 
