@@ -38,6 +38,20 @@ function toAvatarUrl(userId: string, avatarHash: string | null): string | null {
     return url;
 }
 
+async function downloadAvatar(userId: string, avatarUrl: string): Promise<void> {
+    const targetDir = "assets/images";
+    const targetPath = `${targetDir}/avatar-${userId}`;
+
+    if (await Bun.file(targetPath).exists()) {
+        return;
+    }
+
+    const buffer = await got(avatarUrl).buffer();
+    const {mkdir} = await import("node:fs/promises");
+    await mkdir(targetDir, {recursive: true});
+    await Bun.write(targetPath, buffer);
+}
+
 export async function memberToUser(member: GuildMember): Promise<{
     id: string;
     username: string;
@@ -66,10 +80,7 @@ export async function memberToUser(member: GuildMember): Promise<{
     try {
         const avatarUrl = toAvatarUrl(userId, avatarHash);
         if (avatarUrl) {
-            const targetDir = "assets/images";
-            const targetPath = `${targetDir}/avatar-${userId}`;
-            const buffer = await got(avatarUrl).buffer();
-            await Bun.write(targetPath, buffer);
+            await downloadAvatar(userId, avatarUrl);
         } else {
             avatarHash = null;
         }

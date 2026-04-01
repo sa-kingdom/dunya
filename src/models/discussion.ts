@@ -34,7 +34,7 @@ Discussion.init({
 export function threadToDiscussion(thread: AnyThreadChannel): {
     id: string;
     name: string;
-    userId: string;
+    userId: string | null;
     lastMessageId: string | null;
     messageCount: number | null;
     memberCount: number | null;
