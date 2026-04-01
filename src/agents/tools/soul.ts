@@ -1,6 +1,7 @@
 import {DynamicStructuredTool} from "langchain";
 import {z} from "zod";
 import Soul from "../../models/soul.ts";
+import {getMust} from "../../config.ts";
 
 export function createSoulReadTool(): DynamicStructuredTool {
     return new DynamicStructuredTool({
@@ -10,8 +11,7 @@ export function createSoulReadTool(): DynamicStructuredTool {
             reason: z.string().optional().describe("Reason for reading your soul"),
         }),
         func: async () => {
-            const soulId = process.env.SOUL_ID;
-            if (!soulId) return "SOUL_ID is not configured in the environment.";
+            const soulId = getMust("SOUL_ID");
 
             const soul = await Soul.findByPk(soulId);
             if (!soul) {
@@ -30,18 +30,12 @@ export function createSoulWriteTool(): DynamicStructuredTool {
             content: z.string().describe("The new content to write to your soul."),
         }),
         func: async ({content}: { content: string }) => {
-            const soulId = process.env.SOUL_ID;
-            if (!soulId) return "SOUL_ID is not configured in the environment.";
+            const soulId = getMust("SOUL_ID");
 
-            const [soul, created] = await Soul.findOrCreate({
-                where: {id: soulId},
-                defaults: {id: soulId, content},
+            await Soul.upsert({
+                id: soulId,
+                content,
             });
-
-            if (!created) {
-                soul.content = content;
-                await soul.save();
-            }
 
             return "Successfully updated your soul content.";
         },
