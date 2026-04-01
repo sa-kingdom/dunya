@@ -1,46 +1,43 @@
 {
   "name": "deter_core",
   "version": "1.0.0",
-  "description": "Tiny microservice framework with flexible.",
+  "type": "module",
+  "description": "Discord bot for syncing forum discussions to database.",
   "author": "Star Inc.",
   "homepage": "https://starinc.xyz",
   "license": "MIT",
-  "main": "app.mjs",
+  "main": "app.ts",
   "scripts": {
-    "dev": "nodemon app.mjs",
-    "start": "node app.mjs",
+    "dev": "bun --watch app.ts",
+    "start": "bun app.ts",
     "lint": "npx lint-staged",
-    "lint:es": "eslint \"*.mjs\" \"src/**/*.mjs\"",
-    "lint:es:fix": "eslint \"*.mjs\" \"src/**/*.mjs\" --fix",
+    "lint:es": "eslint \"*.ts\" \"src/**/*.ts\"",
+    "lint:es:fix": "eslint \"*.ts\" \"src/**/*.ts\" --fix",
     "prepare": "husky install"
   },
   "lint-staged": {
-    "*.mjs": "eslint"
+    "*.ts": "eslint"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "discord-markdown-parser": "^1.1.0",
     "discord.js": "^14.13.0",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "express-validator": "^6.14.3",
     "got": "^14.3.0",
-    "http-status-codes": "^2.2.0",
     "mysql2": "^3.7.1",
-    "node-cache": "^5.1.2",
-    "request-ip": "^3.3.0",
     "sequelize": "^6.35.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.4",
     "@commitlint/config-conventional": "^17.4.4",
+    "@types/bun": "^1.3.11",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.17.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jsdoc": "^48.0.2",
     "husky": "^8.0.3",
-    "lint-staged": "^13.2.0",
-    "nodemon": "^2.0.13"
+    "lint-staged": "^13.2.0"
   },
   "config": {
     "commitizen": {

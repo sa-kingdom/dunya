@@ -1,33 +1,21 @@
-import {
-    useSequelize,
-} from "../init/sequelize.mjs";
-
-import {
-    DataTypes,
-    Model,
-} from "sequelize";
-
-import {
-    createWriteStream,
-} from "node:fs";
-
-import discord from "discord.js";
+import {useSequelize} from "../init/sequelize.ts";
+import {DataTypes, Model} from "sequelize";
+import type {GuildMember} from "discord.js";
 import got from "got";
 
-/**
- * Base urls for CDN and Media endpoints in Discord's API.
- */
 const baseUrlCdn = "https://cdn.discordapp.com";
-
-/**
- * Sequalise instance for database connection.
- */
 const sequelize = useSequelize();
 
 /**
- * User
+ * User Model
  */
-export default class User extends Model { }
+export default class User extends Model {
+    declare id: string;
+    declare username: string;
+    declare displayName: string;
+    declare avatarHash: string | null;
+}
+
 User.init({
     id: {
         type: DataTypes.STRING,
@@ -41,13 +29,7 @@ User.init({
     modelName: "user",
 });
 
-/**
- * Mapping avatar hash into imeage url.
- * @param {string} userId - The id of the discord user.
- * @param {string} avatarHash - The image hash of the avatar.
- * @return {string|null} - The url of the avatar image.
- */
-function toAvatarUrl(userId, avatarHash) {
+function toAvatarUrl(userId: string, avatarHash: string | null): string | null {
     if (!userId || !avatarHash) {
         return null;
     }
@@ -56,12 +38,12 @@ function toAvatarUrl(userId, avatarHash) {
     return url;
 }
 
-/**
- * Convert Discord's Member to Deter's User
- * @param {discord.Member} member Discord's Member
- * @return {Object}
- */
-export async function memberToUser(member) {
+export async function memberToUser(member: GuildMember): Promise<{
+    id: string;
+    username: string;
+    displayName: string;
+    avatarHash: string | null;
+}> {
     const {
         user,
         nickname: memberLocalDisplayName,
@@ -84,14 +66,10 @@ export async function memberToUser(member) {
     try {
         const avatarUrl = toAvatarUrl(userId, avatarHash);
         if (avatarUrl) {
-            const targetPath = `assets/images/avatar-${userId}`;
-            await new Promise((resolve, reject) => {
-                got.
-                    stream(avatarUrl).
-                    pipe(createWriteStream(targetPath)).
-                    once("finish", resolve).
-                    on("error", reject);
-            });
+            const targetDir = "assets/images";
+            const targetPath = `${targetDir}/avatar-${userId}`;
+            const buffer = await got(avatarUrl).buffer();
+            await Bun.write(targetPath, buffer);
         } else {
             avatarHash = null;
         }
