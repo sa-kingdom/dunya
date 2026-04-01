@@ -2,13 +2,14 @@ import Discussion from "./discussion.ts";
 import Media from "./media.ts";
 import Post from "./post.ts";
 import User from "./user.ts";
+import "./soul.ts";
+
 
 Discussion.belongsTo(User);
 Discussion.hasMany(Post);
 
 Post.belongsTo(User);
 Post.belongsTo(Discussion);
-Post.hasMany(Media);
 Post.belongsToMany(Media, {
     through: "post_media",
 });
