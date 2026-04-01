@@ -32,6 +32,7 @@ export function createSoulReadTool() {
         {
             name: "soul_read",
             description: "Read your current soul (state, identity, and context).",
+            schema: z.object({}),
         },
     );
 }
@@ -164,6 +165,7 @@ export function createSoulClearTool() {
         {
             name: "soul_clear",
             description: "Clear your entire soul. Use with extreme caution.",
+            schema: z.object({}),
         },
     );
 }
