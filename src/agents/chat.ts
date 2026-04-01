@@ -6,6 +6,10 @@ import {MemorySaver} from "@langchain/langgraph";
 
 import {getFallback} from "../config.ts";
 
+import {
+    createCurrentDateTime,
+} from "./tools/current-datetime.ts";
+
 // Define the system prompt with a clear and authoritative persona for the agent
 const systemPrompt = readFileSync("settings.txt", "utf-8").trim();
 
@@ -21,7 +25,9 @@ const model = new ChatOpenAI({
 });
 
 // Define tools for agent capabilities
-const tools: DynamicStructuredTool[] = [];
+const tools: DynamicStructuredTool[] = [
+    createCurrentDateTime(),
+];
 
 // Create the production-ready ReAct agent using the modern createAgent factory
 export const agent = createAgent({
