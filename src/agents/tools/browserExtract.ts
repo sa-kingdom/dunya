@@ -31,6 +31,7 @@ export function createBrowserExtractTool(
                     .map((r) => `URL: ${r.url}\nContent: ${r.rawContent}`)
                     .join("\n\n---\n\n");
             } catch (error: unknown) {
+                console.error("browser_extract failed:", error);
                 const msg = error instanceof Error ? error.message : String(error);
                 return `Extraction failed: ${msg}`;
             }

@@ -40,6 +40,7 @@ export function createBrowserSearchTool(
                     .map((r) => `Title: ${r.title}\nURL: ${r.url}\nContent: ${r.content}`)
                     .join("\n\n");
             } catch (error: unknown) {
+                console.error("browser_search failed:", error);
                 return `Search failed: ${error instanceof Error ? error.message : String(error)}`;
             }
         },
