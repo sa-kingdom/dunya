@@ -45,7 +45,7 @@ export function getOverview(): { node: string; runtime: string } {
  * Shortcut to get config value.
  */
 export function get(key: string): string | undefined {
-    return process.env[key];
+    return Bun.env[key];
 }
 
 /**
