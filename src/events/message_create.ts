@@ -36,7 +36,9 @@ async function syncMessage(message: Message): Promise<void> {
 }
 
 async function replyMessage(message: Message): Promise<void> {
-    if (message.author.bot) return;
+    if (message.author.bot || message.guildId !== guildId) {
+        return;
+    }
 
     if (!client.user || !message.mentions.has(client.user)) {
         return;
