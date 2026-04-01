@@ -1,7 +1,4 @@
-# Asuna - A blazing-fast, progressive microservice framework.
-# SPDX-License-Identifier: BSD-3-Clause (https://ncurl.xyz/s/mI23sevHR)
-
-name: Build workflow
+name: Main workflow
 
 on:
   push:
@@ -12,22 +9,24 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-and-push-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-push-image:
     name: Build and publish a Docker image
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
+      - name: Set up QEMU and Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
@@ -46,8 +45,21 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/amd64
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-service:
+    name: Deploy application as service
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via Webhook
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        run: |
+          curl --silent --show-error --fail -X PUT "$DEPLOY_WEBHOOK_URL"
