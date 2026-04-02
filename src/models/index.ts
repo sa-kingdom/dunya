@@ -13,12 +13,12 @@ Post.belongsTo(Discussion);
 Post.belongsToMany(Media, {
     through: PostMedia,
     foreignKey: "postId",
-    otherKey: "mediaId",
+    otherKey: "mediumId",
 });
 
 Media.belongsToMany(Post, {
     through: PostMedia,
-    foreignKey: "mediaId",
+    foreignKey: "mediumId",
     otherKey: "postId",
 });
 

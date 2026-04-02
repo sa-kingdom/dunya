@@ -128,7 +128,7 @@ export const sync = async (isForceRefresh: boolean = false): Promise<void> => {
 
     // Build PostMedia links
     const postMediaLinks = appendPosts.flatMap((post) =>
-        post.media.map((m) => ({postId: post.id, mediaId: m.id})),
+        post.media.map((m) => ({postId: post.id, mediumId: m.id})),
     );
 
     // Layered bulk saves in a transaction
