@@ -81,11 +81,15 @@ Media.init({
     modelName: "media",
 });
 
-async function downloadMedia(id: string, url: string): Promise<void> {
+async function downloadMedia(
+    id: string,
+    url: string,
+    isForceRefresh: boolean = false,
+): Promise<void> {
     const targetDir = "assets/images";
     const targetPath = `${targetDir}/media-${id}`;
 
-    if (await Bun.file(targetPath).exists()) {
+    if (!isForceRefresh && await Bun.file(targetPath).exists()) {
         return;
     }
 
@@ -100,7 +104,10 @@ async function downloadMedia(id: string, url: string): Promise<void> {
     }
 }
 
-export async function attachmentToMedia(attachment: Attachment): Promise<{
+export async function attachmentToMedia(
+    attachment: Attachment,
+    isForceRefresh: boolean = false,
+): Promise<{
     id: string;
     name: string;
     description: string | null;
@@ -123,7 +130,7 @@ export async function attachmentToMedia(attachment: Attachment): Promise<{
         ephemeral, duration, waveform,
     } = attachment;
 
-    await downloadMedia(id, url);
+    await downloadMedia(id, url, isForceRefresh);
 
     return {
         id,

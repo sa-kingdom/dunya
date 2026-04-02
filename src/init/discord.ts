@@ -39,12 +39,8 @@ const client = new Client({
     },
 });
 
-const botToken = getMust("DISCORD_BOT_TOKEN");
-const channelIdForum = getMust("DISCORD_CHANNEL_ID_FORUM");
-
-export const initializePromise = (async (): Promise<void> => {
-    await client.login(botToken);
-
+export const sync = async (isForceRefresh: boolean = false): Promise<void> => {
+    const channelIdForum = getMust("DISCORD_CHANNEL_ID_FORUM");
     const channel = await client.channels.fetch(channelIdForum);
     if (!channel || channel.type !== ChannelType.GuildForum) {
         throw new Error("Target channel is not a forum channel");
@@ -53,36 +49,37 @@ export const initializePromise = (async (): Promise<void> => {
     // Threads
     const channelThreadActivated = await channel.threads.fetch();
     const channelThreadArchived = await channel.threads.fetchArchived();
-    const remoteActivatedThreads = Array.from(
-        channelThreadActivated.threads.values(),
-    );
-    const remoteArchivedThreads = Array.from(
-        channelThreadArchived.threads.values(),
-    );
-    const remoteThreads = remoteActivatedThreads.concat(remoteArchivedThreads);
+    const remoteThreads = [
+        ...channelThreadActivated.threads.values(),
+        ...channelThreadArchived.threads.values(),
+    ];
     const remoteThreadIds = remoteThreads.map(({id}) => id);
-    const localThreads = await Discussion.findAll({
-        where: {
-            id: {[Op.in]: remoteThreadIds},
-        },
-    });
-    const localThreadIds = localThreads.map((t) => t.id);
-    const appendThreadIds = remoteThreadIds.filter(
-        (id) => !localThreadIds.includes(id),
-    );
-    const appendThreads = remoteThreads.filter(
-        ({id}) => appendThreadIds.includes(id),
-    ).map(threadToDiscussion);
+
+    let threadsToProcess = remoteThreads;
+    if (!isForceRefresh) {
+        const localThreads = await Discussion.findAll({
+            where: {id: {[Op.in]: remoteThreadIds}},
+            attributes: ["id"],
+        });
+        const localThreadIds = localThreads.map((t) => t.id);
+        const appendThreadIds = remoteThreadIds.filter(
+            (id) => !localThreadIds.includes(id),
+        );
+        threadsToProcess = remoteThreads.filter(
+            ({id}) => appendThreadIds.includes(id),
+        );
+    }
+
+    const appendThreads = threadsToProcess.map((t) => threadToDiscussion(t));
 
     // Posts
-    const messageThreads = remoteThreads.filter(
-        ({id}) => appendThreadIds.includes(id),
-    );
-    const threadMessages = await Promise.all(messageThreads.map(
+    const threadMessages = await Promise.all(threadsToProcess.map(
         (thread) => thread.messages.fetch(),
     ));
     const appendPostsRaw = await Promise.all(threadMessages.map(
-        (messages) => Promise.all(Array.from(messages.values()).map(messageToPost)),
+        (messages) => Promise.all(
+            Array.from(messages.values()).map((m) => messageToPost(m, isForceRefresh)),
+        ),
     ));
     const appendPosts = appendPostsRaw.flat();
 
@@ -90,33 +87,50 @@ export const initializePromise = (async (): Promise<void> => {
     const remoteUserIds = Array.from(
         new Set(appendPosts.map(({userId}) => userId)),
     );
-    const localUsers = await User.findAll({
-        where: {
-            id: {[Op.in]: remoteUserIds},
-        },
-    });
-    const localUserIds = localUsers.map((u) => u.id);
-    const appendUserIds = remoteUserIds.filter(
-        (id) => !localUserIds.includes(id),
-    );
+
+    let userIdsToFetch = remoteUserIds;
+    if (!isForceRefresh) {
+        const localUsers = await User.findAll({
+            where: {id: {[Op.in]: remoteUserIds}},
+            attributes: ["id"],
+        });
+        const localUserIds = localUsers.map((u) => u.id);
+        userIdsToFetch = remoteUserIds.filter(
+            (id) => !localUserIds.includes(id),
+        );
+    }
+
     const remoteUsers = await channel.guild.members.fetch({
-        user: appendUserIds,
+        user: userIdsToFetch,
     });
     const appendUsers = await Promise.all(Array.from(
         remoteUsers.values(),
-    ).map(memberToUser));
+    ).map((m) => memberToUser(m, isForceRefresh)));
 
-    // Bulk creation
+    // Bulk creation / Upsert
     await User.bulkCreate(appendUsers, {
-        ignoreDuplicates: true,
+        updateOnDuplicate: ["username", "displayName", "avatarHash"],
     });
     await Discussion.bulkCreate(appendThreads, {
-        ignoreDuplicates: true,
+        updateOnDuplicate: [
+            "name",
+            "lastMessageId",
+            "messageCount",
+            "memberCount",
+        ],
     });
     await Post.bulkCreate(appendPosts, {
-        ignoreDuplicates: true,
+        updateOnDuplicate: ["content"],
         include: [Media],
     });
-})();
+};
+
+export const initialize = async (
+    isForceRefresh: boolean = false,
+): Promise<void> => {
+    const botToken = getMust("DISCORD_BOT_TOKEN");
+    await client.login(botToken);
+    await sync(isForceRefresh);
+};
 
 export const useClient = (): Client => client;

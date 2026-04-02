@@ -42,11 +42,12 @@ async function downloadAvatar(
     userId: string,
     avatarUrl: string,
     avatarHash: string,
+    isForceRefresh: boolean = false,
 ): Promise<void> {
     const targetDir = "assets/images";
     const targetPath = `${targetDir}/avatar-${userId}-${avatarHash}`;
 
-    if (await Bun.file(targetPath).exists()) {
+    if (!isForceRefresh && await Bun.file(targetPath).exists()) {
         return;
     }
 
@@ -69,7 +70,10 @@ async function downloadAvatar(
     await Bun.write(targetPath, buffer);
 }
 
-export async function memberToUser(member: GuildMember): Promise<{
+export async function memberToUser(
+    member: GuildMember,
+    isForceRefresh: boolean = false,
+): Promise<{
     id: string;
     username: string;
     displayName: string;
@@ -97,7 +101,7 @@ export async function memberToUser(member: GuildMember): Promise<{
     try {
         const avatarUrl = toAvatarUrl(userId, avatarHash);
         if (avatarUrl && avatarHash) {
-            await downloadAvatar(userId, avatarUrl, avatarHash);
+            await downloadAvatar(userId, avatarUrl, avatarHash, isForceRefresh);
         } else {
             avatarHash = null;
         }

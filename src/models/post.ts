@@ -27,7 +27,10 @@ Post.init({
     paranoid: true,
 });
 
-export async function messageToPost(message: Message): Promise<{
+export async function messageToPost(
+    message: Message,
+    isForceRefresh: boolean = false,
+): Promise<{
     id: string;
     content: string;
     userId: string;
@@ -46,7 +49,9 @@ export async function messageToPost(message: Message): Promise<{
 
     const {id: userId} = author;
     const media = await Promise.all(
-        Array.from(attachments.values()).map(attachmentToMedia),
+        Array.from(attachments.values()).map(
+            (attachment) => attachmentToMedia(attachment, isForceRefresh),
+        ),
     );
 
     return {
