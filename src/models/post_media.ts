@@ -16,13 +16,11 @@ PostMedia.init({
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
-        field: "post_id",
     },
     mediaId: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
-        field: "media_id",
     },
 }, {
     sequelize,
