@@ -8,7 +8,7 @@ const sequelize = useSequelize();
  */
 export default class PostMedia extends Model {
     declare postId: string;
-    declare mediaId: string;
+    declare mediumId: string;
 }
 
 PostMedia.init({
@@ -17,7 +17,7 @@ PostMedia.init({
         allowNull: false,
         primaryKey: true,
     },
-    mediaId: {
+    mediumId: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
