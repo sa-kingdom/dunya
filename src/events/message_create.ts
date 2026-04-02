@@ -41,7 +41,7 @@ async function syncMessage(message: Message): Promise<void> {
         const authorUser = await memberToUser(authorMember as GuildMember);
         await User.upsert(authorUser);
 
-        await Post.create(messageToPost(message), {include: [Media]});
+        await Post.create(await messageToPost(message), {include: [Media]});
     } catch (error) {
         console.error("Failed to sync message:", error);
     }

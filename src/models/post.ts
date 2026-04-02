@@ -27,14 +27,14 @@ Post.init({
     paranoid: true,
 });
 
-export function messageToPost(message: Message): {
+export async function messageToPost(message: Message): Promise<{
     id: string;
     content: string;
     userId: string;
     createdAt: number;
     discussionId: string;
-    media: ReturnType<typeof attachmentToMedia>[];
-} {
+    media: Awaited<ReturnType<typeof attachmentToMedia>>[];
+}> {
     const {
         id,
         content,
@@ -45,7 +45,9 @@ export function messageToPost(message: Message): {
     } = message;
 
     const {id: userId} = author;
-    const media = Array.from(attachments.values()).map(attachmentToMedia);
+    const media = await Promise.all(
+        Array.from(attachments.values()).map(attachmentToMedia),
+    );
 
     return {
         id,

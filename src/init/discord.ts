@@ -81,9 +81,10 @@ export const initializePromise = (async (): Promise<void> => {
     const threadMessages = await Promise.all(messageThreads.map(
         (thread) => thread.messages.fetch(),
     ));
-    const appendPosts = threadMessages.map(
-        (messages) => Array.from(messages.values()).map(messageToPost),
-    ).flat();
+    const appendPostsRaw = await Promise.all(threadMessages.map(
+        (messages) => Promise.all(Array.from(messages.values()).map(messageToPost)),
+    ));
+    const appendPosts = appendPostsRaw.flat();
 
     // Users
     const remoteUserIds = Array.from(

@@ -1,6 +1,7 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
 import type {Attachment} from "discord.js";
+import got from "got";
 
 const sequelize = useSequelize();
 
@@ -80,7 +81,26 @@ Media.init({
     modelName: "media",
 });
 
-export function attachmentToMedia(attachment: Attachment): {
+async function downloadMedia(id: string, url: string): Promise<void> {
+    const targetDir = "assets/images";
+    const targetPath = `${targetDir}/media-${id}`;
+
+    if (await Bun.file(targetPath).exists()) {
+        return;
+    }
+
+    try {
+        const {mkdir} = await import("node:fs/promises");
+        await mkdir(targetDir, {recursive: true});
+
+        const buffer = await got(url).buffer();
+        await Bun.write(targetPath, buffer);
+    } catch (e) {
+        console.error(`Failed to download media ${id}:`, e);
+    }
+}
+
+export async function attachmentToMedia(attachment: Attachment): Promise<{
     id: string;
     name: string;
     description: string | null;
@@ -93,7 +113,7 @@ export function attachmentToMedia(attachment: Attachment): {
     ephemeral: boolean | null;
     duration: number | null;
     waveform: string | null;
-} {
+}> {
     const {
         id,
         name, description,
@@ -102,6 +122,8 @@ export function attachmentToMedia(attachment: Attachment): {
         height, width,
         ephemeral, duration, waveform,
     } = attachment;
+
+    await downloadMedia(id, url);
 
     return {
         id,
