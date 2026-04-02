@@ -1,6 +1,7 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
-import type {Attachment} from "discord.js";
+import type {Attachment, Sticker} from "discord.js";
+import {StickerFormatType} from "discord.js";
 import got from "got";
 
 const sequelize = useSequelize();
@@ -139,5 +140,61 @@ export async function attachmentToMedia(
         url, proxyUrl,
         height, width,
         ephemeral, duration, waveform,
+    };
+}
+
+export async function stickerToMedia(
+    sticker: Sticker,
+    isForceRefresh: boolean = false,
+): Promise<{
+    id: string;
+    name: string;
+    description: string | null;
+    contentType: string | null;
+    size: number;
+    url: string;
+    proxyUrl: string;
+    height: number | null;
+    width: number | null;
+    ephemeral: boolean | null;
+    duration: number | null;
+    waveform: string | null;
+}> {
+    const {
+        id,
+        name, description,
+        format, url,
+    } = sticker;
+
+    let contentType: string | null = null;
+    switch (format) {
+    case StickerFormatType.PNG:
+        contentType = "image/png";
+        break;
+    case StickerFormatType.APNG:
+        contentType = "image/apng";
+        break;
+    case StickerFormatType.Lottie:
+        contentType = "application/json";
+        break;
+    case StickerFormatType.GIF:
+        contentType = "image/gif";
+        break;
+    }
+
+    await downloadMedia(id, url, isForceRefresh);
+
+    // Get size if possible (since Sticker doesn't have it)
+    const targetPath = `assets/images/media-${id}`;
+    const file = Bun.file(targetPath);
+    const size = (await file.exists()) ? file.size : 0;
+
+    return {
+        id,
+        name, description,
+        contentType, size,
+        url, proxyUrl: url,
+        height: null, width: null,
+        ephemeral: false, duration: null, waveform: null,
     };
 }
