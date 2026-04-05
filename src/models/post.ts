@@ -1,7 +1,7 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
 import type {Message} from "discord.js";
-import {attachmentToMedia} from "./media.ts";
+import {attachmentToMedia, stickerToMedia} from "./media.ts";
 
 const sequelize = useSequelize();
 
@@ -27,14 +27,17 @@ Post.init({
     paranoid: true,
 });
 
-export function messageToPost(message: Message): {
+export async function messageToPost(
+    message: Message,
+    isForceRefresh: boolean = false,
+): Promise<{
     id: string;
     content: string;
     userId: string;
     createdAt: number;
     discussionId: string;
-    media: ReturnType<typeof attachmentToMedia>[];
-} {
+    media: Awaited<ReturnType<typeof attachmentToMedia>>[];
+}> {
     const {
         id,
         content,
@@ -42,10 +45,21 @@ export function messageToPost(message: Message): {
         createdTimestamp: createdAt,
         channelId: discussionId,
         attachments,
+        stickers,
     } = message;
 
     const {id: userId} = author;
-    const media = Array.from(attachments.values()).map(attachmentToMedia);
+    const mediaAttachments = await Promise.all(
+        Array.from(attachments.values()).map(
+            (attachment) => attachmentToMedia(attachment, isForceRefresh),
+        ),
+    );
+    const mediaStickers = await Promise.all(
+        Array.from(stickers.values()).map(
+            (sticker) => stickerToMedia(sticker, isForceRefresh),
+        ),
+    );
+    const media = [...mediaAttachments, ...mediaStickers];
 
     return {
         id,

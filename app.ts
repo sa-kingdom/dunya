@@ -1,12 +1,22 @@
 // Auto-load config
 import "./src/init/config.ts";
 
-// Import modules
+import {Command} from "commander";
 import {APP_NAME as appName} from "./src/init/const.ts";
 import {getOverview} from "./src/config.ts";
-import {initializePromise as initDiscord, Events as discordEvents} from "./src/init/discord.ts";
+import {initialize as initDiscord, Events as discordEvents} from "./src/init/discord.ts";
 import {initializePromise as initSequelize} from "./src/init/sequelize.ts";
 import {camelToSnakeCase} from "./src/utils/native.ts";
+
+// CLI options
+const program = new Command();
+program
+    .name(appName)
+    .description("Discord bot for syncing forum discussions to database.")
+    .option("-f, --force-refresh", "Force refresh all data and media", false)
+    .parse(process.argv);
+
+const options = program.opts();
 
 // Define event names
 const eventNames: string[] = [
@@ -36,9 +46,14 @@ const loadEvents = (eventNames: string[]): void => {
     try {
         // Wait for Discord and Database initialization
         await Promise.all([
-            initDiscord,
+            initDiscord(options.forceRefresh),
             initSequelize,
         ]);
+
+        if (options.forceRefresh) {
+            console.info("Force refresh completed.");
+            process.exit(0);
+        }
 
         // Load all event handlers
         loadEvents(eventNames);

@@ -38,21 +38,42 @@ function toAvatarUrl(userId: string, avatarHash: string | null): string | null {
     return url;
 }
 
-async function downloadAvatar(userId: string, avatarUrl: string): Promise<void> {
+async function downloadAvatar(
+    userId: string,
+    avatarUrl: string,
+    avatarHash: string,
+    isForceRefresh: boolean = false,
+): Promise<void> {
     const targetDir = "assets/images";
-    const targetPath = `${targetDir}/avatar-${userId}`;
+    const targetPath = `${targetDir}/avatar-${userId}-${avatarHash}`;
 
-    if (await Bun.file(targetPath).exists()) {
+    if (!isForceRefresh && await Bun.file(targetPath).exists()) {
         return;
     }
 
-    const buffer = await got(avatarUrl).buffer();
-    const {mkdir} = await import("node:fs/promises");
+    const {mkdir, readdir, unlink} = await import("node:fs/promises");
     await mkdir(targetDir, {recursive: true});
+
+    // Cleanup old avatars for this user
+    try {
+        const files = await readdir(targetDir).catch(() => []);
+        for (const file of files) {
+            if (file.startsWith(`avatar-${userId}-`) || file === `avatar-${userId}`) {
+                await unlink(`${targetDir}/${file}`).catch(() => {});
+            }
+        }
+    } catch (e) {
+        console.warn(`Failed to cleanup old avatars for user ${userId}:`, e);
+    }
+
+    const buffer = await got(avatarUrl).buffer();
     await Bun.write(targetPath, buffer);
 }
 
-export async function memberToUser(member: GuildMember): Promise<{
+export async function memberToUser(
+    member: GuildMember,
+    isForceRefresh: boolean = false,
+): Promise<{
     id: string;
     username: string;
     displayName: string;
@@ -79,8 +100,8 @@ export async function memberToUser(member: GuildMember): Promise<{
 
     try {
         const avatarUrl = toAvatarUrl(userId, avatarHash);
-        if (avatarUrl) {
-            await downloadAvatar(userId, avatarUrl);
+        if (avatarUrl && avatarHash) {
+            await downloadAvatar(userId, avatarUrl, avatarHash, isForceRefresh);
         } else {
             avatarHash = null;
         }
