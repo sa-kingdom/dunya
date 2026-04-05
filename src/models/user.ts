@@ -44,7 +44,7 @@ async function downloadAvatar(
     avatarHash: string,
     isForceRefresh: boolean = false,
 ): Promise<void> {
-    const targetDir = "assets/images";
+    const targetDir = "assets";
     const targetPath = `${targetDir}/avatar-${userId}-${avatarHash}`;
 
     if (!isForceRefresh && await Bun.file(targetPath).exists()) {
