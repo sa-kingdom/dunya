@@ -1,7 +1,9 @@
 name: Auto approve PRs by dependabot
 
 # Trigger the workflow on pull request
-on: pull_request_target
+on:
+  pull_request_target:
+  workflow_dispatch:
 
 jobs:
   autoapprove:
