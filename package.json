@@ -13,7 +13,7 @@
     "lint": "npx lint-staged",
     "lint:es": "eslint \"*.ts\" \"src/**/*.ts\"",
     "lint:es:fix": "eslint \"*.ts\" \"src/**/*.ts\" --fix",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.ts": "eslint"
