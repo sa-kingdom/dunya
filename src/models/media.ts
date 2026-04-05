@@ -87,7 +87,7 @@ async function downloadMedia(
     url: string,
     isForceRefresh: boolean = false,
 ): Promise<void> {
-    const targetDir = "assets/images";
+    const targetDir = "assets";
     const targetPath = `${targetDir}/media-${id}`;
 
     if (!isForceRefresh && await Bun.file(targetPath).exists()) {
@@ -175,7 +175,7 @@ export async function stickerToMedia(
         contentType = "image/apng";
         break;
     case StickerFormatType.Lottie:
-        contentType = "application/json";
+        contentType = "application/x-lottie+json";
         break;
     case StickerFormatType.GIF:
         contentType = "image/gif";
@@ -185,7 +185,7 @@ export async function stickerToMedia(
     await downloadMedia(id, url, isForceRefresh);
 
     // Get size if possible (since Sticker doesn't have it)
-    const targetPath = `assets/images/media-${id}`;
+    const targetPath = `assets/media-${id}`;
     const file = Bun.file(targetPath);
     const size = (await file.exists()) ? file.size : 0;
 
