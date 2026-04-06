@@ -24,8 +24,11 @@ RUN chown -R \
     3000:3000 \
     /app
 
+RUN chmod +x \
+    /app/docker-entrypoint.sh
+
 USER 3000
 RUN bun install
 
 EXPOSE 3000
-CMD ["bun", "start"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
