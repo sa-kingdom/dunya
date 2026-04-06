@@ -39,13 +39,16 @@ export default class Member extends Model {
             }
 
             // Batch upsert members and roles
+            const now = new Date();
             const memberData = Array.from(memberUpdates.entries()).map(([id, displayName]) => ({
                 id,
                 displayName,
+                updatedAt: now,
             }));
             const roleData = Array.from(mentions.roles.values()).map((r) => ({
                 id: r.id,
                 name: r.name,
+                updatedAt: now,
             }));
 
             await Promise.all([
