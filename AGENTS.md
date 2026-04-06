@@ -10,6 +10,7 @@ This repository follows a strict workflow. All AI agents (including assistants a
   - NEVER target `main` directly for features or refinements.
   - ALWAYS create a feature branch (e.g. `feat/lottie-sticker-support`) and target `rolling` as the base branch.
   - The repository follows a `rolling -> main` flow for deployments.
+  - **Language**: ALWAYS use **English** for all technical documentation, code comments, and Pull Request titles/descriptions.
   - **Review Workflow**:
     - Once a PR is created, ALWAYS comment `/gemini review` in the GitHub PR after every commit.
     - If you disagree with a review, ALWAYS use a GitHub comment starting with `/gemini {{message}}` to provide justification.
@@ -40,7 +41,7 @@ Dunya is a specialized Discord bot designed to bridge the gap between high-speed
 ### Core Components
 
 1. **Sync Engine (`src/events/`)**: Monitors Discord activities (Message/Thread Create, Update, Delete) and reconciles them with the database in real-time. This ensures that forum-style discussions are persistently mirrored in the Storage Layer.
-2. **Storage Layer (`src/models/`)**: Built with Sequelize (MySQL), the data model focuses on forum hierarchies: Discussions, Posts, Media, Users, and the persistent **Soul** (AI state).
+2. **Storage Layer (`src/models/`, `database/migrations/`)**: Built with Sequelize (MySQL), the data model focuses on forum hierarchies. **Dunya holds the sole responsibility for database schema management, including table creation, field updates, and migrations.** Consumers (like Deter) must not attempt to modify the schema.
 3. **Agent Brain (`src/agents/`)**: Powered by LangChain, the AI core generates responses based on the "Dunya" persona defined in `settings.txt`. It uses an extensible toolbox (Tavily, Weather, Sandbox) for real-world interactions.
 
 ### Architecture Overview

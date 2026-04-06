@@ -22,7 +22,6 @@ const sequelize = new Sequelize(
 export const initializePromise = (async (): Promise<void> => {
     await import("../models/index.ts");
     await sequelize.authenticate();
-    await sequelize.sync();
 })();
 
 export const useSequelize = (): Sequelize => sequelize;

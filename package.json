@@ -13,7 +13,10 @@
     "lint": "npx lint-staged",
     "lint:es": "eslint \"*.ts\" \"src/**/*.ts\"",
     "lint:es:fix": "eslint \"*.ts\" \"src/**/*.ts\" --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:migrate:status": "sequelize-cli db:migrate:status"
   },
   "lint-staged": {
     "*.ts": "eslint"
@@ -45,7 +48,8 @@
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jsdoc": "^62.9.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0"
+    "lint-staged": "^16.4.0",
+    "sequelize-cli": "^6.6.5"
   },
   "config": {
     "commitizen": {
