@@ -7,6 +7,7 @@ import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
 import User, {memberToUser} from "../models/user.ts";
+import Member from "../models/member.ts";
 import Soul from "../models/soul.ts";
 
 const client = useClient();
@@ -40,12 +41,14 @@ async function syncMessage(message: Message): Promise<void> {
         const authorMember = message.member || await message.guild.members.fetch(message.author.id);
         const authorUser = await memberToUser(authorMember as GuildMember);
         await User.upsert(authorUser);
+        await Member.syncMetadata(message, authorMember as GuildMember);
 
         await Post.create(await messageToPost(message), {include: [Media]});
     } catch (error) {
         console.error("Failed to sync message:", error);
     }
 }
+
 
 async function replyMessage(message: Message): Promise<void> {
     if (message.author.bot || message.guildId !== guildId) {

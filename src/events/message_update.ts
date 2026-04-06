@@ -2,6 +2,7 @@ import {Events, ChannelType, Message, PartialMessage} from "discord.js";
 import {useClient} from "../init/discord.ts";
 import {getMust} from "../config.ts";
 import Post from "../models/post.ts";
+import Member from "../models/member.ts";
 
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
@@ -37,9 +38,11 @@ export default (): void => {
 
             if (newMessage.content) {
                 post.content = newMessage.content;
+                await Member.syncMetadata(newMessage as Message, newMessage.member);
             }
 
             await post.save();
         },
     );
 };
+
