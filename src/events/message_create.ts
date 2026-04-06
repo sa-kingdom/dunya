@@ -42,7 +42,7 @@ async function syncMessage(message: Message): Promise<void> {
         const authorMember = message.member || await message.guild.members.fetch(message.author.id);
         const authorUser = await memberToUser(authorMember as GuildMember);
         await User.upsert(authorUser);
-        await Member.syncMetadata(message);
+        await Member.syncMetadata(message, authorMember as GuildMember);
 
         await Post.create(await messageToPost(message), {include: [Media]});
     } catch (error) {

@@ -39,7 +39,7 @@ export default (): void => {
 
             if (newMessage.content) {
                 post.content = newMessage.content;
-                await Member.syncMetadata(newMessage as Message);
+                await Member.syncMetadata(newMessage as Message, newMessage.member);
             }
 
             await post.save();

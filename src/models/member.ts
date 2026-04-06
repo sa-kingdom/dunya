@@ -1,6 +1,6 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
-import type {Message} from "discord.js";
+import type {Message, GuildMember} from "discord.js";
 import Role from "./role.ts";
 
 const sequelize = useSequelize();
@@ -15,26 +15,27 @@ export default class Member extends Model {
     /**
      * Syncs member and role metadata from a message for name resolution.
      */
-    static async syncMetadata(message: Message): Promise<void> {
+    static async syncMetadata(message: Message, authorMember?: GuildMember | null): Promise<void> {
         try {
             const {mentions, member, author} = message;
             const memberUpdates = new Map<string, string>();
 
             // 1. Collect from mentions.users (lowest priority)
             for (const u of mentions.users.values()) {
-                memberUpdates.set(u.id, u.globalName || u.username);
+                memberUpdates.set(u.id, u.displayName);
             }
 
-            // 2. Collect from mentions.members (higher priority: nicknames)
+            // 2. Collect from mentions.members (higher priority)
             for (const m of mentions.members?.values() || []) {
-                memberUpdates.set(m.id, m.nickname || m.displayName || m.user.username);
+                memberUpdates.set(m.id, m.displayName);
             }
 
             // 3. Collect from author (highest priority for this message)
-            if (member) {
-                memberUpdates.set(author.id, member.nickname || member.displayName || author.username);
+            const effectiveMember = authorMember || member;
+            if (effectiveMember) {
+                memberUpdates.set(author.id, effectiveMember.displayName);
             } else {
-                memberUpdates.set(author.id, author.username);
+                memberUpdates.set(author.id, author.displayName);
             }
 
             // Batch upsert members and roles
@@ -49,10 +50,10 @@ export default class Member extends Model {
 
             await Promise.all([
                 memberData.length > 0 ?
-                    Member.bulkCreate(memberData, {updateOnDuplicate: ["displayName"]}) :
+                    Member.bulkCreate(memberData, {updateOnDuplicate: ["displayName", "updatedAt"]}) :
                     Promise.resolve(),
                 roleData.length > 0 ?
-                    Role.bulkCreate(roleData, {updateOnDuplicate: ["name"]}) :
+                    Role.bulkCreate(roleData, {updateOnDuplicate: ["name", "updatedAt"]}) :
                     Promise.resolve(),
             ]);
         } catch (error) {
