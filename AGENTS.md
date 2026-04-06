@@ -10,6 +10,9 @@ This repository follows a strict workflow. All AI agents (including assistants a
     - NEVER target `main` directly for features or refinements.
     - ALWAYS create a feature branch (e.g. `feat/lottie-sticker-support`) and target `rolling` as the base branch.
     - The repository follows a `rolling -> main` flow for deployments.
+    - **Review Workflow**:
+        - Once a PR is created, ALWAYS run `/gemini review` after every commit.
+        - If you disagree with a review, ALWAYS use `/gemini {{message}}` to provide justification.
 
 ## Tool Usage and Code Editing
 
@@ -40,6 +43,8 @@ Dunya is a specialized Discord bot designed to bridge the gap between high-speed
 3. **Agent Brain (`src/agents/`)**: Powered by LangChain, the AI core generates responses based on the "Dunya" persona defined in `settings.txt`. It uses an extensible toolbox (Tavily, Weather, Sandbox) for real-world interactions.
 
 ### Architecture Overview
+
+- **Single-Guild Design**: This project is designed for a **single-guild only** environment. Do NOT implement multi-guild features (e.g., adding `guildId` as composite key) unless explicitly instructed.
 
 ```mermaid
 graph TD
