@@ -38,13 +38,22 @@ export default class Member extends Model {
             }
 
             // Batch upsert members and roles
+            const memberData = Array.from(memberUpdates.entries()).map(([id, displayName]) => ({
+                id,
+                displayName,
+            }));
+            const roleData = Array.from(mentions.roles.values()).map((r) => ({
+                id: r.id,
+                name: r.name,
+            }));
+
             await Promise.all([
-                ...Array.from(memberUpdates.entries()).map(([id, displayName]) =>
-                    Member.upsert({id, displayName}),
-                ),
-                ...Array.from(mentions.roles.values()).map((r) =>
-                    Role.upsert({id: r.id, name: r.name}),
-                ),
+                memberData.length > 0 ?
+                    Member.bulkCreate(memberData, {updateOnDuplicate: ["displayName"]}) :
+                    Promise.resolve(),
+                roleData.length > 0 ?
+                    Role.bulkCreate(roleData, {updateOnDuplicate: ["name"]}) :
+                    Promise.resolve(),
             ]);
         } catch (error) {
             console.error("Failed to sync metadata:", error);
