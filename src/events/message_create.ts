@@ -42,7 +42,7 @@ async function syncMessage(message: Message): Promise<void> {
         const authorMember = message.member || await message.guild.members.fetch(message.author.id);
         const authorUser = await memberToUser(authorMember as GuildMember);
         await User.upsert(authorUser);
-        await syncMetadata(message);
+        await Member.syncMetadata(message);
 
         await Post.create(await messageToPost(message), {include: [Media]});
     } catch (error) {
@@ -50,50 +50,6 @@ async function syncMessage(message: Message): Promise<void> {
     }
 }
 
-async function syncMetadata(message: Message): Promise<void> {
-    try {
-        const {mentions, member, author} = message;
-
-        // Sync Author as Member
-        if (member) {
-            await Member.upsert({
-                id: author.id,
-                displayName: member.nickname || member.displayName || author.username,
-            });
-        } else {
-            await Member.upsert({
-                id: author.id,
-                displayName: author.username,
-            });
-        }
-
-        // Sync Mentioned Members
-        for (const m of mentions.members?.values() || []) {
-            await Member.upsert({
-                id: m.id,
-                displayName: m.nickname || m.displayName || m.user.username,
-            });
-        }
-
-        // Sync Mentioned Users (who are not members, e.g. DM or if not in cache)
-        for (const u of mentions.users.values()) {
-            await Member.upsert({
-                id: u.id,
-                displayName: u.globalName || u.username,
-            });
-        }
-
-        // Sync Mentioned Roles
-        for (const r of mentions.roles.values()) {
-            await Role.upsert({
-                id: r.id,
-                name: r.name,
-            });
-        }
-    } catch (error) {
-        console.error("Failed to sync metadata:", error);
-    }
-}
 
 async function replyMessage(message: Message): Promise<void> {
     if (message.author.bot || message.guildId !== guildId) {
