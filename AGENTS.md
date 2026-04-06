@@ -8,7 +8,7 @@ This repository follows a strict workflow. All AI agents (including assistants a
 - **Stable Branch**: `main`
 - **PR Strategy**:
     - NEVER target `main` directly for features or refinements.
-    - ALWAYS create a feature branch and target `rolling` as the base branch.
+    - ALWAYS create a feature branch (e.g. `feat/lottie-sticker-support`) and target `rolling` as the base branch.
     - The repository follows a `rolling -> main` flow for deployments.
 
 ## Tool Usage and Code Editing
