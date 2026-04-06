@@ -40,7 +40,7 @@ Dunya is a specialized Discord bot designed to bridge the gap between high-speed
 ### Core Components
 
 1. **Sync Engine (`src/events/`)**: Monitors Discord activities (Message/Thread Create, Update, Delete) and reconciles them with the database in real-time. This ensures that forum-style discussions are persistently mirrored in the Storage Layer.
-2. **Storage Layer (`src/models/`)**: Built with Sequelize (MySQL), the data model focuses on forum hierarchies: Discussions, Posts, Media, Users, and the persistent **Soul** (AI state).
+2. **Storage Layer (`src/models/`, `database/migrations/`)**: Built with Sequelize (MySQL), the data model focuses on forum hierarchies. **Dunya holds the sole responsibility for database schema management, including table creation, field updates, and migrations.** Consumers (like Deter) must not attempt to modify the schema.
 3. **Agent Brain (`src/agents/`)**: Powered by LangChain, the AI core generates responses based on the "Dunya" persona defined in `settings.txt`. It uses an extensible toolbox (Tavily, Weather, Sandbox) for real-world interactions.
 
 ### Architecture Overview
