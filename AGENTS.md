@@ -31,7 +31,8 @@ This repository follows a strict workflow. All AI agents (including assistants a
     - `style:`: Changes that do not affect the meaning of the code (white-space, formatting, etc.).
     - `ci:`: Changes to CI configuration scripts and tools.
     - `build:`: Changes that affect the build system or external dependencies.
-- **Git Hooks**: Since you are an AI agent, remember to add `--no-verify` when committing to avoid being stuck by interactive terminals or Git hooks.
+- **Git Hooks**: Since you are an AI agent, remember to use `HUSKY=0` prefix (e.g. `HUSKY=0 git commit -m "..."`) to bypass all Git hooks and avoid being stuck by interactive terminals.
+
 
 ## Project Architecture & Functionalities
 
