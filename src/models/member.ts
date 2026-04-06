@@ -51,14 +51,17 @@ export default class Member extends Model {
                 updatedAt: now,
             }));
 
-            await Promise.all([
-                memberData.length > 0 ?
-                    Member.bulkCreate(memberData, {updateOnDuplicate: ["displayName", "updatedAt"]}) :
-                    Promise.resolve(),
-                roleData.length > 0 ?
-                    Role.bulkCreate(roleData, {updateOnDuplicate: ["name", "updatedAt"]}) :
-                    Promise.resolve(),
-            ]);
+            const tasks: Promise<any>[] = [];
+            if (memberData.length > 0) {
+                tasks.push(Member.bulkCreate(memberData, {updateOnDuplicate: ["displayName", "updatedAt"]}));
+            }
+            if (roleData.length > 0) {
+                tasks.push(Role.bulkCreate(roleData, {updateOnDuplicate: ["name", "updatedAt"]}));
+            }
+
+            if (tasks.length > 0) {
+                await Promise.all(tasks);
+            }
         } catch (error) {
             console.error("Failed to sync metadata:", error);
         }

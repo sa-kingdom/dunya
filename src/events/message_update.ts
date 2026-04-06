@@ -3,7 +3,6 @@ import {useClient} from "../init/discord.ts";
 import {getMust} from "../config.ts";
 import Post from "../models/post.ts";
 import Member from "../models/member.ts";
-import Role from "../models/role.ts";
 
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");

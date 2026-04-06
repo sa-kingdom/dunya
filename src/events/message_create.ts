@@ -8,7 +8,6 @@ import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
 import User, {memberToUser} from "../models/user.ts";
 import Member from "../models/member.ts";
-import Role from "../models/role.ts";
 import Soul from "../models/soul.ts";
 
 const client = useClient();
