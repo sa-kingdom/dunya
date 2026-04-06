@@ -3,6 +3,8 @@ import Media from "./media.ts";
 import Post from "./post.ts";
 import PostMedia from "./post_media.ts";
 import User from "./user.ts";
+import Member from "./member.ts";
+import Role from "./role.ts";
 import "./soul.ts";
 
 Discussion.belongsTo(User);
