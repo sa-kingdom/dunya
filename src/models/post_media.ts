@@ -9,6 +9,8 @@ const sequelize = useSequelize();
 export default class PostMedia extends Model {
     declare postId: string;
     declare mediumId: string;
+    declare createdAt: Date;
+    declare updatedAt: Date;
 }
 
 PostMedia.init({
@@ -26,5 +28,5 @@ PostMedia.init({
     sequelize,
     tableName: "post_media",
     modelName: "PostMedia",
-    timestamps: false,
+    timestamps: true,
 });

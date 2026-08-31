@@ -163,26 +163,33 @@ export async function stickerToMedia(
     const {
         id,
         name, description,
-        format, url,
+        format,
     } = sticker;
 
-    let contentType: string | null = null;
+    let ext = "png";
+    let contentType = "image/png";
     switch (format) {
-    case StickerFormatType.PNG:
-        contentType = "image/png";
-        break;
     case StickerFormatType.APNG:
+        ext = "png";
         contentType = "image/apng";
         break;
     case StickerFormatType.Lottie:
+        ext = "json";
         contentType = "application/x-lottie+json";
         break;
     case StickerFormatType.GIF:
+        ext = "gif";
         contentType = "image/gif";
+        break;
+    case StickerFormatType.PNG:
+    default:
+        ext = "png";
+        contentType = "image/png";
         break;
     }
 
-    await downloadMedia(id, url, isForceRefresh);
+    const stickerUrl = `https://cdn.discordapp.com/stickers/${id}.${ext}`;
+    await downloadMedia(id, stickerUrl, isForceRefresh);
 
     // Get size if possible (since Sticker doesn't have it)
     const targetPath = `assets/media-${id}`;
@@ -191,10 +198,16 @@ export async function stickerToMedia(
 
     return {
         id,
-        name, description,
-        contentType, size,
-        url, proxyUrl: url,
-        height: null, width: null,
-        ephemeral: false, duration: null, waveform: null,
+        name,
+        description: description || null,
+        contentType,
+        size,
+        url: stickerUrl,
+        proxyUrl: stickerUrl,
+        height: null,
+        width: null,
+        ephemeral: false,
+        duration: null,
+        waveform: null,
     };
 }

@@ -127,9 +127,13 @@ export const sync = async (isForceRefresh: boolean = false): Promise<void> => {
     const allMedia = Array.from(mediaMap.values());
 
     // Build PostMedia links
-    const postMediaLinks = appendPosts.flatMap((post) =>
-        post.media.map((m) => ({postId: post.id, mediumId: m.id})),
-    );
+    const postMediaMap = new Map<string, {postId: string; mediumId: string}>();
+    for (const post of appendPosts) {
+        for (const m of post.media) {
+            postMediaMap.set(`${post.id}:${m.id}`, {postId: post.id, mediumId: m.id});
+        }
+    }
+    const postMediaLinks = Array.from(postMediaMap.values());
 
     // Layered bulk saves in a transaction
     const sequelize = useSequelize();
