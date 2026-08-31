@@ -3,10 +3,11 @@ import "./src/init/config.ts";
 
 import {Command} from "commander";
 import {APP_NAME as appName} from "./src/init/const.ts";
-import {getOverview} from "./src/config.ts";
+import {getFallback, getOverview} from "./src/config.ts";
 import {initialize as initDiscord, Events as discordEvents} from "./src/init/discord.ts";
 import {initializePromise as initSequelize} from "./src/init/sequelize.ts";
 import {camelToSnakeCase} from "./src/utils/native.ts";
+import {rootRouter} from "./src/init/router.ts";
 
 // CLI options
 const program = new Command();
@@ -41,6 +42,25 @@ const loadEvents = (eventNames: string[]): void => {
     eventMappers.forEach((c) => c.then((f) => f.default()));
 };
 
+// Define router names
+const routerNames: string[] = [
+    "root",
+    "chat",
+];
+
+// Load routes
+const loadRoutes = async (routerNames: string[]): Promise<void> => {
+    const snakeNames = routerNames.map(camelToSnakeCase);
+
+    const routeDirectory = new URL("src/routes/", import.meta.url);
+    const routeFilenames = snakeNames.map(
+        (n) => new URL(`${n}.ts`, routeDirectory),
+    );
+
+    const routerMappers = routeFilenames.map((n) => import(n.href));
+    await Promise.all(routerMappers.map((c) => c.then((f) => f.default())));
+};
+
 // Initialize and start bot
 (async (): Promise<void> => {
     try {
@@ -58,14 +78,29 @@ const loadEvents = (eventNames: string[]): void => {
         // Load all event handlers
         loadEvents(eventNames);
 
+        // Load all routes
+        await loadRoutes(routerNames);
+
+        // Start HTTP server
+        const port = Number(getFallback("PORT", getFallback("HTTP_PORT", "3000")));
+        const hostname = getFallback("HTTP_HOSTNAME", "0.0.0.0");
+
+        Bun.serve({
+            fetch: rootRouter.fetch,
+            port,
+            hostname,
+        });
+
         // Display status
         const {node, runtime} = getOverview();
         console.info(appName, `(environment: ${node}, ${runtime})`);
         console.info("====");
         console.info("Discord bot is running...");
         console.info("Database connection established.");
+        console.info(`HTTP server is listening at http://${hostname}:${port}`);
     } catch (error) {
         console.error("Failed to start bot:", error);
         process.exit(1);
     }
 })();
+
