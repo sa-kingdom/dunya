@@ -1,6 +1,6 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
-import type {Attachment, Sticker} from "discord.js";
+import type {Attachment, Sticker, Embed} from "discord.js";
 import {StickerFormatType} from "discord.js";
 import got from "got";
 
@@ -211,3 +211,76 @@ export async function stickerToMedia(
         waveform: null,
     };
 }
+
+export async function embedToMedia(
+    embed: Embed,
+    messageId: string,
+    index: number,
+    isForceRefresh: boolean = false,
+): Promise<{
+    id: string;
+    name: string;
+    description: string | null;
+    contentType: string | null;
+    size: number;
+    url: string;
+    proxyUrl: string;
+    height: number | null;
+    width: number | null;
+    ephemeral: boolean | null;
+    duration: number | null;
+    waveform: string | null;
+} | null> {
+    if (embed.data.type !== "gifv" && embed.data.type !== "image") {
+        return null;
+    }
+
+    const mediaUrl = embed.data.thumbnail?.url || embed.data.image?.url;
+    if (!mediaUrl) {
+        return null;
+    }
+
+    const id = `${messageId}-e${index}`;
+    const proxyUrl = embed.data.thumbnail?.proxy_url || embed.data.image?.proxy_url || mediaUrl;
+
+    await downloadMedia(id, mediaUrl, isForceRefresh);
+
+    const targetPath = `assets/media-${id}`;
+    const file = Bun.file(targetPath);
+    const size = (await file.exists()) ? file.size : 0;
+
+    let contentType = "image/webp";
+    try {
+        const pathname = new URL(mediaUrl).pathname.toLowerCase();
+        if (pathname.endsWith(".gif")) {
+            contentType = "image/gif";
+        } else if (pathname.endsWith(".mp4")) {
+            contentType = "video/mp4";
+        } else if (pathname.endsWith(".webp")) {
+            contentType = "image/webp";
+        } else if (pathname.endsWith(".png")) {
+            contentType = "image/png";
+        } else if (pathname.endsWith(".jpg") || pathname.endsWith(".jpeg")) {
+            contentType = "image/jpeg";
+        }
+    } catch {
+        if (mediaUrl.includes(".gif")) contentType = "image/gif";
+        else if (mediaUrl.includes(".mp4")) contentType = "video/mp4";
+    }
+
+    return {
+        id,
+        name: embed.data.title || "GIF",
+        description: embed.data.description || null,
+        contentType,
+        size,
+        url: mediaUrl,
+        proxyUrl,
+        height: embed.data.thumbnail?.height || embed.data.image?.height || null,
+        width: embed.data.thumbnail?.width || embed.data.image?.width || null,
+        ephemeral: false,
+        duration: null,
+        waveform: null,
+    };
+}
+
