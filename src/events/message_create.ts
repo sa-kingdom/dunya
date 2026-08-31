@@ -6,9 +6,11 @@ import {sliceContent, toPromptWithContext} from "../utils/text.ts";
 import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
+import PostMedia from "../models/post_media.ts";
 import User, {memberToUser} from "../models/user.ts";
 import Member from "../models/member.ts";
 import Soul from "../models/soul.ts";
+import {useSequelize} from "../init/sequelize.ts";
 
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
@@ -43,7 +45,38 @@ async function syncMessage(message: Message): Promise<void> {
         await User.upsert(authorUser);
         await Member.syncMetadata(message, authorMember as GuildMember);
 
-        await Post.create(await messageToPost(message), {include: [Media]});
+        const postData = await messageToPost(message);
+        const sequelize = useSequelize();
+        await sequelize.transaction(async (t) => {
+            if (postData.media.length > 0) {
+                await Media.bulkCreate(postData.media, {
+                    updateOnDuplicate: [
+                        "name", "description", "contentType", "size",
+                        "url", "proxyUrl", "height", "width",
+                        "ephemeral", "duration", "waveform",
+                    ],
+                    transaction: t,
+                });
+            }
+
+            const {media: _media, ...postRow} = postData;
+            await Post.upsert(postRow, {transaction: t});
+
+            if (postData.media.length > 0) {
+                const seenMediumIds = new Set<string>();
+                const postMediaLinks: {postId: string; mediumId: string}[] = [];
+                for (const m of postData.media) {
+                    if (!seenMediumIds.has(m.id)) {
+                        seenMediumIds.add(m.id);
+                        postMediaLinks.push({postId: message.id, mediumId: m.id});
+                    }
+                }
+                await PostMedia.bulkCreate(postMediaLinks, {
+                    ignoreDuplicates: true,
+                    transaction: t,
+                });
+            }
+        });
     } catch (error) {
         console.error("Failed to sync message:", error);
     }
