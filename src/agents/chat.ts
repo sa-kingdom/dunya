@@ -4,7 +4,9 @@ import {createAgent, DynamicStructuredTool} from "langchain";
 import {ChatOpenAI} from "@langchain/openai";
 import {MemorySaver} from "@langchain/langgraph";
 
-import {get, getFallback} from "../config.ts";
+import {get, getFallback, getMust} from "../config.ts";
+import {toPromptWithContext} from "../utils/text.ts";
+import Soul from "../models/soul.ts";
 
 import {
     createCurrentTimeTool,
@@ -69,3 +71,91 @@ export const agent = createAgent({
     checkpointer,
     systemPrompt,
 });
+
+/**
+ * Chat context interface for user and channel details.
+ */
+export interface ChatContext {
+    channelId: string;
+    channelName?: string;
+    channelType?: string;
+    channelLocale?: string;
+    guildId?: string;
+    userId?: string;
+    displayName?: string;
+    localeCode?: string;
+    authorUsername?: string;
+    referMessageId?: string;
+    referencedMessageAuthorName?: string;
+    referencedMessageContent?: string;
+    [key: string]: any;
+}
+
+/**
+ * Read the current persona content from the database.
+ * @returns The soul content.
+ */
+async function readSoul(): Promise<string> {
+    try {
+        const soulId = getMust("SOUL_ID");
+        const soul = await Soul.findByPk(soulId);
+        return soul?.content || "(empty)";
+    } catch (error) {
+        console.error("Failed to read soul:", error);
+        return "(unavailable)";
+    }
+}
+
+/**
+ * Unified interface to chat with the AI persona.
+ * @param context - The channel and user context.
+ * @param textPrompt - The user prompt text.
+ * @returns The AI generated response text.
+ */
+export async function chatWithAI(
+    context: ChatContext,
+    textPrompt: string,
+): Promise<string> {
+    const threadId = context.channelId;
+    const soulContent = await readSoul();
+
+    const promptContext: Record<string, string> = {
+        yourSoul: soulContent,
+        guildId: context.guildId || "(none)",
+        channelId: context.channelId,
+        channelLocale: context.channelLocale || context.localeCode || "zh-TW",
+        authorId: context.userId || "(none)",
+        authorName: context.displayName || context.authorUsername || "Anonymous",
+        authorUsername: context.authorUsername || context.displayName || "Anonymous",
+        referMessageId: context.referMessageId || "(none)",
+    };
+
+    if (context.referencedMessageAuthorName && context.referencedMessageContent) {
+        promptContext.referencedMessageAuthorName = context.referencedMessageAuthorName;
+        promptContext.referencedMessageContent = context.referencedMessageContent;
+    }
+
+    const promptWithContext = toPromptWithContext(textPrompt, promptContext);
+    const config = {configurable: {thread_id: threadId}};
+
+    const initialState = await agent.graph.getState(config);
+    const initialMessagesCount = initialState.values?.messages?.length || 0;
+
+    const result = await agent.invoke(
+        {messages: [{role: "user", content: promptWithContext}]},
+        config,
+    );
+
+    const newMessages = result.messages.slice(initialMessagesCount);
+    let responseText = "";
+
+    for (const msg of newMessages) {
+        const type = msg.type;
+        if (type === "ai" && msg.content) {
+            responseText = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content);
+        }
+    }
+
+    return responseText;
+}
+
