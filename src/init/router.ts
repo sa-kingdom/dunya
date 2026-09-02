@@ -1,7 +1,7 @@
 // Asuna - A blazing-fast, progressive microservice framework.
 // SPDX-License-Identifier: BSD-3-Clause (https://ncurl.xyz/s/mI23sevHR)
 
-import {AutoRouter} from "itty-router";
+import { AutoRouter } from 'itty-router';
 
 export type AsunaRegister = () => void;
 

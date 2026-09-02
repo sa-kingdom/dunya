@@ -4,21 +4,24 @@
  * Get POSIX Timestamp (second)
  */
 export function getPosixTimestamp(): number {
-    return Math.floor(new Date().getTime() / 1000);
+  return Math.floor(new Date().getTime() / 1000);
 }
 
 /**
  * Shortcut for hasOwnProperty with safe.
+ * @param srcObject
+ * @param propName
  */
 export function isObjectPropExists(srcObject: object, propName: string): boolean {
-    return Object.prototype.hasOwnProperty.call(srcObject, propName);
+  return Object.prototype.hasOwnProperty.call(srcObject, propName);
 }
 
 /**
  * Converts a string from camelCase to snake_case.
+ * @param str
  */
 export function camelToSnakeCase(str: string): string {
-    return str.replace(/[A-Z]/g, (letter) =>
-        `_${letter.toLowerCase()}`,
-    );
+  return str.replace(/[A-Z]/g, (letter) =>
+    `_${letter.toLowerCase()}`,
+  );
 }
