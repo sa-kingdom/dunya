@@ -28,7 +28,7 @@
     "commander": "^15.0.0",
     "discord.js": "^14.13.0",
     "dotenv": "^17.4.0",
-    "got": "^15.0.0",
+    "got": "^16.0.0",
     "http-status-codes": "^2.3.0",
     "itty-router": "^5.0.24",
     "jsonwebtoken": "^9.0.3",
