@@ -1,16 +1,32 @@
-name: Auto approve PRs by dependabot
+name: Auto merge PRs by dependabot
 
 # Trigger the workflow on pull request
 on:
   pull_request_target:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  autoapprove:
-    name: Auto-Approve a PR by dependabot
+  automerge:
+    name: Auto-merge a PR by dependabot
     runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
     steps:
-      - name: Auto approve
-        uses: cognitedata/auto-approve-dependabot-action@v3.0.1
-        if: github.actor == 'dependabot[bot]' || github.actor == 'dependabot-preview[bot]'
+      - name: Fetch Dependabot metadata
+        uses: dependabot/fetch-metadata@v2
         with:
-          github-token: ${{ secrets.AUTO_DEPENDABOT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve PR
+        run: gh pr review --approve "$PR_URL" || true
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.AUTO_DEPENDABOT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Auto-merge PR
+        run: gh pr merge --auto --merge "$PR_URL" || gh pr merge --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.AUTO_DEPENDABOT_TOKEN || secrets.GITHUB_TOKEN }}
