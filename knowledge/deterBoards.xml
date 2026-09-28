@@ -1,0 +1,19 @@
+<knowledge name="deter-boards" lang="zh-TW" updated="2026-09-28">
+    <description>Deter 迪特論壇的特色看板（collections）分類與內容。</description>
+
+    <section title="頂層看板">
+        <fact>Deter 側邊欄的看板包括：網站建議/回報、站方、集中串、綜合、廢文、心情、認真、創作、遊戲、輔導級內容、Nex 開發社群、管制區。</fact>
+        <fact>「站方」看板收錄公告、預告、規範、計畫、處分名單、手冊等官方內容。</fact>
+        <fact>「管制區」看板收錄成人與限制級分類（真人成人、二次元成人）。</fact>
+    </section>
+
+    <section title="綜合看板下的子看板">
+        <fact>「綜合」看板包含子看板：閒聊、問題、寶拉、八卦、音樂、動漫、教學、推坑、程式、政治、新聞、YouTuber、戲劇、VTuber、安價。</fact>
+        <fact>「創作」看板包含子看板：繪畫、小說。</fact>
+    </section>
+
+    <section title="分類範圍">
+        <fact>看板分類主要涵蓋歷史（Flarum 時期）文章；從 Discord 同步的新討論會顯示在「全部話題」。</fact>
+        <fact>「網站建議/回報」看板內含「封存」與「處理中」子分類，用於追蹤社群回報事項的處理狀態。</fact>
+    </section>
+</knowledge>

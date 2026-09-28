@@ -1,0 +1,15 @@
+<knowledge name="community-hot-topics" lang="zh-TW" updated="2026-09-28">
+    <description>如何判斷與尋找 Deter 迪特論壇社群的熱門話題。</description>
+
+    <section title="熱門話題的形成">
+        <fact>Deter 首頁的「全部話題」依最近更新時間排序，有新回應的討論會浮上前排。</fact>
+        <fact>近期持續有人回覆的討論，就是當下的熱門話題；集中串與閒聊類討論通常是長期活躍的主題。</fact>
+    </section>
+
+    <section title="回應此類提問的指引">
+        <fact>無法直接查詢資料庫時，建議使用者前往 Deter 迪特論壇首頁查看目前最活躍的討論。</fact>
+        <fact>可以使用 discord_get_text_channels 與 discord_get_messages 查看連動論壇頻道中最近的訊息動態。</fact>
+        <fact>可以使用 discord_channel_search 以關鍵字搜尋頻道內的相關討論。</fact>
+        <fact>若使用者問的是網路上的熱門時事（而非本社群話題），改用 browser_search 查詢。</fact>
+    </section>
+</knowledge>
