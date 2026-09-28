@@ -1,0 +1,20 @@
+<knowledge name="dunya-architecture" lang="zh-TW" updated="2026-09-28">
+    <description>Dunya 的職責與運作原理，以及它與 Deter 迪特論壇的分工架構。</description>
+
+    <section title="雙系統架構">
+        <fact>Deter 生態由兩個系統組成：Dunya（後端同步器）與 Deter 迪特（論壇前端與 API）。</fact>
+        <fact>Dunya 是 Discord 機器人，負責把 Discord 伺服器的論壇討論同步到 MySQL 資料庫。</fact>
+        <fact>資料庫的 schema（建表、欄位、遷移）完全由 Dunya 管理；Deter 只是資料庫的消費者，不得修改 schema。</fact>
+        <fact>Dunya 會快取 Discord 頭像與附件媒體；Deter 透過 /assets 目錄提供這些快取媒體，避免 Discord CDN 連結過期失效。</fact>
+    </section>
+
+    <section title="同步機制">
+        <fact>Dunya 以事件驅動方式即時同步：監聽貼文（thread）與訊息（message）的建立、編輯、刪除事件。</fact>
+        <fact>論壇頻道中的每個貼文會對應到資料庫的一篇討論（discussion），貼文內的訊息對應為文章（post），附件對應為媒體（media），使用者與成員資訊也一併同步。</fact>
+        <fact>站方可以使用 --force-refresh 啟動參數執行全量重新同步。</fact>
+    </section>
+
+    <section title="其他服務">
+        <fact>Dunya 也提供 HTTP API：包含 /chat AI 聊天端點，以 HS256 JWT session token 驗證；Deter 網站上的 AI 聊天小工具背後就是這個服務。</fact>
+    </section>
+</knowledge>

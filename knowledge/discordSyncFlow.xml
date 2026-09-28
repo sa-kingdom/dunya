@@ -1,0 +1,18 @@
+<knowledge name="discord-sync-flow" lang="zh-TW" updated="2026-09-28">
+    <description>使用者如何透過 Discord 發布文章，以及文章如何同步到 Deter 迪特論壇。</description>
+
+    <section title="發布方式">
+        <fact>完全不需要額外操作：只要在 Deter 連動的那個 Discord 論壇頻道（forum channel）發布貼文，Dunya 就會自動同步。</fact>
+        <fact>在論壇頻道建立新貼文（thread）後，Dunya 會即時在資料庫建立對應的討論。</fact>
+        <fact>在貼文內回覆訊息會同步為文章（post）；訊息中的附件（圖片、檔案）會同步為媒體（media）。</fact>
+    </section>
+
+    <section title="後續變更">
+        <fact>編輯訊息或刪除訊息時，資料庫中的文章也會即時更新或刪除。</fact>
+        <fact>貼文的更名、編輯、刪除同樣會同步到對應的討論。</fact>
+    </section>
+
+    <section title="顯示位置">
+        <fact>同步完成的討論會出現在 Deter 迪特論壇首頁的「全部話題」列表中，依最近活動排序。</fact>
+    </section>
+</knowledge>

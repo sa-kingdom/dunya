@@ -11,6 +11,7 @@ export {createBrowserSearchTool} from "./browserSearch.ts";
 export {createBrowserExtractTool} from "./browserExtract.ts";
 export {createOpenWeatherMapTool} from "./openWeatherMap.ts";
 export {createCodeExecutionTool} from "./codeExecution.ts";
+export {createKnowledgeRetrievalTool} from "./knowledge.ts";
 export {
     createDiscordGetGuilds,
     createDiscordGetTextChannels,
