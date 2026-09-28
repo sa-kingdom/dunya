@@ -49,11 +49,17 @@ async function canMove(
 export const moveCommand = {
     data: new SlashCommandBuilder()
         .setName("move")
-        .setDescription("Move this forum post to a board (forum tag).")
+        .setDescription("Move this forum post from one board to another.")
         .addStringOption((option) =>
             option
-                .setName("board")
-                .setDescription("The name of the target board.")
+                .setName("from")
+                .setDescription("The name of the board to move from.")
+                .setRequired(true),
+        )
+        .addStringOption((option) =>
+            option
+                .setName("to")
+                .setDescription("The name of the board to move to.")
                 .setRequired(true),
         ),
 
@@ -79,15 +85,40 @@ export const moveCommand = {
 
         const thread = channel;
         const parent = thread.parent as ForumChannel;
-        const boardName = interaction.options.getString("board", true);
         const availableBoards = parent.availableTags;
-        const target = availableBoards.find(
-            (tag) => tag.name.toLowerCase() === boardName.toLowerCase(),
-        );
-        if (!target) {
+        const resolveBoard = (name: string) =>
+            availableBoards.find(
+                (tag) => tag.name.toLowerCase() === name.toLowerCase(),
+            );
+        const fromName = interaction.options.getString("from", true);
+        const toName = interaction.options.getString("to", true);
+        const from = resolveBoard(fromName);
+        const to = resolveBoard(toName);
+        if (!from || !to) {
+            const notFound = !from ? fromName : toName;
             const boardList = availableBoards.map((tag) => tag.name).join(", ");
             await interaction.reply({
-                content: `Board "${boardName}" not found. Available boards: ${boardList || "(none)"}.`,
+                content: `Board "${notFound}" not found. Available boards: ${boardList || "(none)"}.`,
+                ephemeral: true,
+            });
+            return;
+        }
+
+        if (!thread.appliedTags.includes(from.id)) {
+            const currentBoards = thread.appliedTags
+                .flatMap((tagId) => availableBoards.filter((tag) => tag.id === tagId))
+                .map((tag) => tag.name)
+                .join(", ");
+            await interaction.reply({
+                content: `This post is not in board "${fromName}". Current boards: ${currentBoards || "(none)"}.`,
+                ephemeral: true,
+            });
+            return;
+        }
+
+        if (from.id === to.id) {
+            await interaction.reply({
+                content: "The source and target boards are the same.",
                 ephemeral: true,
             });
             return;
@@ -102,8 +133,14 @@ export const moveCommand = {
         }
 
         try {
-            await thread.setAppliedTags([target.id]);
-            await interaction.reply(`This post has been moved to board "${target.name}".`);
+            const nextTags = [
+                ...thread.appliedTags.filter((tagId) => tagId !== from.id),
+                to.id,
+            ];
+            await thread.setAppliedTags(nextTags);
+            await interaction.reply(
+                `This post has been moved from board "${from.name}" to board "${to.name}".`,
+            );
         } catch (error: unknown) {
             console.error("move command failed:", error);
             await interaction.reply({
