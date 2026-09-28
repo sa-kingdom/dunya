@@ -25,6 +25,7 @@ import {
     createBrowserExtractTool,
     createOpenWeatherMapTool,
     createCodeExecutionTool,
+    createKnowledgeRetrievalTool,
 } from "./tools/index.ts";
 
 // Define the system prompt with a clear and authoritative persona for the agent
@@ -59,6 +60,7 @@ const toolsArray = [
     createBrowserExtractTool(get("TAVILY_API_KEY")),
     createOpenWeatherMapTool(get("OPENWEATHER_API_KEY")),
     createCodeExecutionTool(),
+    createKnowledgeRetrievalTool(),
 ];
 
 // Define tools for agent capabilities
