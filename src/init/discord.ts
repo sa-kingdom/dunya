@@ -5,7 +5,9 @@ import {
     ChannelType,
     PresenceUpdateStatus,
     ActivityType,
+    Events,
 } from "discord.js";
+import {once} from "node:events";
 import {getMust} from "../config.ts";
 import {Op} from "sequelize";
 import {useSequelize} from "./sequelize.ts";
@@ -14,6 +16,7 @@ import Post, {messageToPost} from "../models/post.ts";
 import PostMedia from "../models/postMedia.ts";
 import User, {memberToUser} from "../models/user.ts";
 import Media, {attachmentToMedia} from "../models/media.ts";
+import {moveCommand} from "../commands/move.ts";
 
 export {Events} from "discord.js";
 
@@ -187,7 +190,23 @@ export const initialize = async (
 ): Promise<void> => {
     const botToken = getMust("DISCORD_BOT_TOKEN");
     await client.login(botToken);
+    await registerCommands();
     await sync(isForceRefresh);
+};
+
+/**
+ * Register guild-scoped slash commands for the configured guild.
+ */
+const registerCommands = async (): Promise<void> => {
+    if (!client.isReady()) {
+        await once(client, Events.ClientReady);
+    }
+    const guildId = getMust("DISCORD_GUILD_ID");
+    if (!client.application) {
+        throw new Error("Client application is not available");
+    }
+    await client.application.commands.set([moveCommand.data], guildId);
+    console.info(`[commands] Registered guild commands for ${guildId}.`);
 };
 
 export const useClient = (): Client => client;

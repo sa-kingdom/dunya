@@ -26,6 +26,7 @@ const eventNames: string[] = [
     discordEvents.ThreadCreate,
     discordEvents.ThreadDelete,
     discordEvents.ThreadUpdate,
+    discordEvents.InteractionCreate,
 ];
 
 // Load events
