@@ -16,7 +16,7 @@ import Post, {messageToPost} from "../models/post.ts";
 import PostMedia from "../models/postMedia.ts";
 import User, {memberToUser} from "../models/user.ts";
 import Media, {attachmentToMedia} from "../models/media.ts";
-import {moveCommand} from "../commands/move.ts";
+import {assignCommand} from "../commands/assign.ts";
 
 export {Events} from "discord.js";
 
@@ -205,7 +205,7 @@ const registerCommands = async (): Promise<void> => {
     if (!client.application) {
         throw new Error("Client application is not available");
     }
-    await client.application.commands.set([moveCommand.data], guildId);
+    await client.application.commands.set([assignCommand.data], guildId);
     console.info(`[commands] Registered guild commands for ${guildId}.`);
 };
 

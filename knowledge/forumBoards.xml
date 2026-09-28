@@ -1,5 +1,5 @@
 <knowledge name="forum-boards" lang="zh-TW" updated="2026-09-28">
-    <description>Deter 論壇的看板分類機制，以及如何用 /move 指令移動文章。</description>
+    <description>Deter 論壇的看板分類機制，以及如何用 /assign 指令移動文章。</description>
 
     <section title="看板機制">
         <fact>從 Discord 同步的討論以論壇頻道的標籤（tags）作為看板分類；建立貼文時選的標籤就是它的看板。</fact>
@@ -8,7 +8,7 @@
     </section>
 
     <section title="移動文章到看板">
-        <fact>在論壇貼文內使用 /move 指令，指定 from（目前看板）與 to（目標看板），即可把該篇文章移動到指定看板。</fact>
+        <fact>在論壇貼文內使用 /assign 指令，指定 from（目前看板）與 to（目標看板），即可把該篇文章移動到指定看板。</fact>
         <fact>還沒有任何看板的貼文，可以直接省略 from，只用 to 參數指派看板。</fact>
         <fact>移動只會替換指定的看板標籤，文章上的其他標籤（例如狀態標籤）會保留。</fact>
         <fact>可以移動文章的人：貼文作者、擁有「管理貼文」權限的成員，或站方設定的管理身份組成員。</fact>

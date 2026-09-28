@@ -11,7 +11,7 @@ import {getMust, get} from "../config.ts";
 const channelIdForum = getMust("DISCORD_CHANNEL_ID_FORUM");
 
 /**
- * Get the moderator role IDs allowed to move posts.
+ * Get the moderator role IDs allowed to assign boards.
  * @returns Array of role IDs.
  */
 const getModeratorRoleIds = (): string[] => {
@@ -22,14 +22,14 @@ const getModeratorRoleIds = (): string[] => {
 };
 
 /**
- * Check whether the user may move the given thread.
+ * Check whether the user may change the boards of the given thread.
  * Allowed for the thread author, configured moderator roles,
  * and members with the "Manage Threads" permission.
  * @param interaction - The chat input command interaction.
- * @param thread - The forum thread to move.
- * @returns True when the user is allowed to move the thread.
+ * @param thread - The forum thread to assign boards.
+ * @returns True when the user is allowed to change the boards.
  */
-async function canMove(
+async function canAssign(
     interaction: ChatInputCommandInteraction,
     thread: ThreadChannel,
 ): Promise<boolean> {
@@ -46,10 +46,10 @@ async function canMove(
     return getModeratorRoleIds().some((id) => member.roles.cache.has(id));
 }
 
-export const moveCommand = {
+export const assignCommand = {
     data: new SlashCommandBuilder()
-        .setName("move")
-        .setDescription("Move this forum post from one board to another.")
+        .setName("assign")
+        .setDescription("Assign or move this forum post between boards.")
         .addStringOption((option) =>
             option
                 .setName("from")
@@ -59,12 +59,12 @@ export const moveCommand = {
         .addStringOption((option) =>
             option
                 .setName("to")
-                .setDescription("The name of the board to move to.")
+                .setDescription("The name of the board to assign.")
                 .setRequired(true),
         ),
 
     /**
-     * Execute the move command.
+     * Execute the assign command.
      * @param interaction - The chat input command interaction.
      */
     async execute(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -124,9 +124,9 @@ export const moveCommand = {
             return;
         }
 
-        if (!await canMove(interaction, thread)) {
+        if (!await canAssign(interaction, thread)) {
             await interaction.reply({
-                content: "Only the post author or moderators can move this post.",
+                content: "Only the post author or moderators can change the boards of this post.",
                 ephemeral: true,
             });
             return;
@@ -143,12 +143,12 @@ export const moveCommand = {
             await interaction.reply(
                 from ?
                     `This post has been moved from board "${from.name}" to board "${to.name}".` :
-                    `This post has been moved to board "${to.name}".`,
+                    `This post has been assigned to board "${to.name}".`,
             );
         } catch (error: unknown) {
-            console.error("move command failed:", error);
+            console.error("assign command failed:", error);
             await interaction.reply({
-                content: "Failed to move this post. Please try again later.",
+                content: "Failed to assign the board. Please try again later.",
                 ephemeral: true,
             });
         }

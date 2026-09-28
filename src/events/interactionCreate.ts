@@ -1,6 +1,6 @@
 import {Events} from "discord.js";
 import {useClient} from "../init/discord.ts";
-import {moveCommand} from "../commands/move.ts";
+import {assignCommand} from "../commands/assign.ts";
 
 const client = useClient();
 
@@ -10,8 +10,8 @@ export default (): void => {
             return;
         }
 
-        if (interaction.commandName === moveCommand.data.name) {
-            await moveCommand.execute(interaction);
+        if (interaction.commandName === assignCommand.data.name) {
+            await assignCommand.execute(interaction);
         }
     });
 };
