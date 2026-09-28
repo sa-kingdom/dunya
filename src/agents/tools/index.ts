@@ -1,4 +1,4 @@
-export {createCurrentTimeTool} from "./current-datetime.ts";
+export {createCurrentTimeTool} from "./currentDatetime.ts";
 export {
     createSoulReadTool,
     createSoulWriteTool,

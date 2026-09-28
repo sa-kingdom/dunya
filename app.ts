@@ -6,7 +6,6 @@ import {APP_NAME as appName} from "./src/init/const.ts";
 import {getFallback, getOverview} from "./src/config.ts";
 import {initialize as initDiscord, Events as discordEvents} from "./src/init/discord.ts";
 import {initializePromise as initSequelize} from "./src/init/sequelize.ts";
-import {camelToSnakeCase} from "./src/utils/native.ts";
 import {rootRouter} from "./src/init/router.ts";
 
 // CLI options
@@ -31,10 +30,8 @@ const eventNames: string[] = [
 
 // Load events
 const loadEvents = (eventNames: string[]): void => {
-    const snakeNames = eventNames.map(camelToSnakeCase);
-
     const eventDirectory = new URL("src/events/", import.meta.url);
-    const eventFilenames = snakeNames.map(
+    const eventFilenames = eventNames.map(
         (n) => new URL(`${n}.ts`, eventDirectory),
     );
 
@@ -50,10 +47,8 @@ const routerNames: string[] = [
 
 // Load routes
 const loadRoutes = async (routerNames: string[]): Promise<void> => {
-    const snakeNames = routerNames.map(camelToSnakeCase);
-
     const routeDirectory = new URL("src/routes/", import.meta.url);
-    const routeFilenames = snakeNames.map(
+    const routeFilenames = routerNames.map(
         (n) => new URL(`${n}.ts`, routeDirectory),
     );
 

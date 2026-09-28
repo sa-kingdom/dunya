@@ -6,7 +6,7 @@ import {sliceContent} from "../utils/text.ts";
 import Discussion from "../models/discussion.ts";
 import Media from "../models/media.ts";
 import Post, {messageToPost} from "../models/post.ts";
-import PostMedia from "../models/post_media.ts";
+import PostMedia from "../models/postMedia.ts";
 import User, {memberToUser} from "../models/user.ts";
 import Member from "../models/member.ts";
 import Soul from "../models/soul.ts";
