@@ -53,8 +53,8 @@ export const moveCommand = {
         .addStringOption((option) =>
             option
                 .setName("from")
-                .setDescription("The name of the board to move from.")
-                .setRequired(true),
+                .setDescription("The name of the board to move from. Omit to assign a board to an untagged post.")
+                .setRequired(false),
         )
         .addStringOption((option) =>
             option
@@ -90,12 +90,12 @@ export const moveCommand = {
             availableBoards.find(
                 (tag) => tag.name.toLowerCase() === name.toLowerCase(),
             );
-        const fromName = interaction.options.getString("from", true);
+        const fromName = interaction.options.getString("from");
         const toName = interaction.options.getString("to", true);
-        const from = resolveBoard(fromName);
+        const from = fromName ? resolveBoard(fromName) : undefined;
         const to = resolveBoard(toName);
-        if (!from || !to) {
-            const notFound = !from ? fromName : toName;
+        if ((fromName && !from) || !to) {
+            const notFound = fromName && !from ? fromName : toName;
             const boardList = availableBoards.map((tag) => tag.name).join(", ");
             await interaction.reply({
                 content: `Board "${notFound}" not found. Available boards: ${boardList || "(none)"}.`,
@@ -104,7 +104,7 @@ export const moveCommand = {
             return;
         }
 
-        if (!thread.appliedTags.includes(from.id)) {
+        if (from && !thread.appliedTags.includes(from.id)) {
             const currentBoards = thread.appliedTags
                 .flatMap((tagId) => availableBoards.filter((tag) => tag.id === tagId))
                 .map((tag) => tag.name)
@@ -116,7 +116,7 @@ export const moveCommand = {
             return;
         }
 
-        if (from.id === to.id) {
+        if (from && from.id === to.id) {
             await interaction.reply({
                 content: "The source and target boards are the same.",
                 ephemeral: true,
@@ -133,13 +133,17 @@ export const moveCommand = {
         }
 
         try {
-            const nextTags = [
-                ...thread.appliedTags.filter((tagId) => tagId !== from.id),
-                to.id,
-            ];
+            const nextTags = from ?
+                [
+                    ...thread.appliedTags.filter((tagId) => tagId !== from.id),
+                    to.id,
+                ] :
+                [...new Set([...thread.appliedTags, to.id])];
             await thread.setAppliedTags(nextTags);
             await interaction.reply(
-                `This post has been moved from board "${from.name}" to board "${to.name}".`,
+                from ?
+                    `This post has been moved from board "${from.name}" to board "${to.name}".` :
+                    `This post has been moved to board "${to.name}".`,
             );
         } catch (error: unknown) {
             console.error("move command failed:", error);
