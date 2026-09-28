@@ -11,7 +11,7 @@ import {Op} from "sequelize";
 import {useSequelize} from "./sequelize.ts";
 import Discussion, {threadToDiscussion} from "../models/discussion.ts";
 import Post, {messageToPost} from "../models/post.ts";
-import PostMedia from "../models/post_media.ts";
+import PostMedia from "../models/postMedia.ts";
 import User, {memberToUser} from "../models/user.ts";
 import Media, {attachmentToMedia} from "../models/media.ts";
 
