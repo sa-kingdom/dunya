@@ -1,7 +1,7 @@
 import {Events, ChannelType, AnyThreadChannel} from "discord.js";
 import {useClient} from "../init/discord.ts";
 import {getMust} from "../config.ts";
-import Discussion from "../models/discussion.ts";
+import Discussion, {threadToTags} from "../models/discussion.ts";
 
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
@@ -30,6 +30,7 @@ export default (): void => {
             }
 
             discussion.name = newThread.name;
+            discussion.tags = threadToTags(newThread);
             await discussion.save();
         },
     );
