@@ -44,6 +44,7 @@ const loadEvents = (eventNames: string[]): void => {
 const routerNames: string[] = [
     "root",
     "chat",
+    "discussions",
 ];
 
 // Load routes
