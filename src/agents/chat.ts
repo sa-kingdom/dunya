@@ -26,6 +26,7 @@ import {
     createOpenWeatherMapTool,
     createCodeExecutionTool,
     createKnowledgeRetrievalTool,
+    createDiscussionGetHotTopics,
 } from "./tools/index.ts";
 
 // Define the system prompt with a clear and authoritative persona for the agent
@@ -61,6 +62,7 @@ const toolsArray = [
     createOpenWeatherMapTool(get("OPENWEATHER_API_KEY")),
     createCodeExecutionTool(),
     createKnowledgeRetrievalTool(),
+    createDiscussionGetHotTopics(),
 ];
 
 // Define tools for agent capabilities
