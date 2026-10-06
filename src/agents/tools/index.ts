@@ -19,3 +19,4 @@ export {
     createDiscordSendMessages,
     createDiscordChannelSearch,
 } from "./discord.ts";
+export {createDiscussionGetHotTopics} from "./discussion.ts";

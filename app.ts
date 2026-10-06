@@ -26,6 +26,7 @@ const eventNames: string[] = [
     discordEvents.ThreadCreate,
     discordEvents.ThreadDelete,
     discordEvents.ThreadUpdate,
+    discordEvents.InteractionCreate,
 ];
 
 // Load events
@@ -43,6 +44,7 @@ const loadEvents = (eventNames: string[]): void => {
 const routerNames: string[] = [
     "root",
     "chat",
+    "discussions",
 ];
 
 // Load routes

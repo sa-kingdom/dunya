@@ -1,6 +1,6 @@
 import {useSequelize} from "../init/sequelize.ts";
 import {DataTypes, Model} from "sequelize";
-import type {AnyThreadChannel} from "discord.js";
+import {ChannelType, type AnyThreadChannel, type ForumChannel} from "discord.js";
 
 const sequelize = useSequelize();
 
@@ -14,6 +14,7 @@ export default class Discussion extends Model {
     declare lastMessageId: string | null;
     declare messageCount: number;
     declare memberCount: number;
+    declare tags: {id: string; name: string}[] | null;
 }
 
 Discussion.init({
@@ -25,11 +26,31 @@ Discussion.init({
     lastMessageId: DataTypes.STRING,
     messageCount: DataTypes.INTEGER,
     memberCount: DataTypes.INTEGER,
+    tags: DataTypes.JSON,
 }, {
     sequelize,
     modelName: "discussion",
     paranoid: true,
 });
+
+/**
+ * Extract the applied forum tags of a thread as board entries.
+ * @param thread - The forum thread.
+ * @returns Array of board entries ({id, name}).
+ */
+export function threadToTags(
+    thread: AnyThreadChannel,
+): {id: string; name: string}[] {
+    const parent = thread.parent;
+    if (!parent || parent.type !== ChannelType.GuildForum) {
+        return [];
+    }
+    return thread.appliedTags.flatMap((tagId) => {
+        const tag = (parent as ForumChannel).availableTags
+            .find((t) => t.id === tagId);
+        return tag ? [{id: tag.id, name: tag.name}] : [];
+    });
+}
 
 export function threadToDiscussion(thread: AnyThreadChannel): {
     id: string;
@@ -39,6 +60,7 @@ export function threadToDiscussion(thread: AnyThreadChannel): {
     messageCount: number | null;
     memberCount: number | null;
     createdAt: number | null;
+    tags: {id: string; name: string}[];
 } {
     const {
         id, name, ownerId: userId, lastMessageId,
@@ -49,5 +71,6 @@ export function threadToDiscussion(thread: AnyThreadChannel): {
     return {
         id, name, userId, lastMessageId,
         messageCount, memberCount, createdAt,
+        tags: threadToTags(thread),
     };
 }
