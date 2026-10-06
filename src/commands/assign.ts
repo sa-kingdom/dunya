@@ -52,15 +52,15 @@ export const assignCommand = {
         .setDescription("Assign or move this forum post between boards.")
         .addStringOption((option) =>
             option
-                .setName("from")
-                .setDescription("The name of the board to move from. Omit to assign a board to an untagged post.")
-                .setRequired(false),
-        )
-        .addStringOption((option) =>
-            option
                 .setName("to")
                 .setDescription("The name of the board to assign.")
                 .setRequired(true),
+        )
+        .addStringOption((option) =>
+            option
+                .setName("from")
+                .setDescription("The name of the board to move from. Omit to assign a board to an untagged post.")
+                .setRequired(false),
         ),
 
     /**
