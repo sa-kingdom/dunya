@@ -6,6 +6,7 @@ import User from "./user.ts";
 import Member from "./member.ts";
 import Role from "./role.ts";
 import "./soul.ts";
+import "./webhookSubscription.ts";
 
 Discussion.belongsTo(User);
 Discussion.hasMany(Post);

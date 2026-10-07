@@ -1,5 +1,6 @@
 import {Events, ChannelType, AnyThreadChannel} from "discord.js";
 import {useClient} from "../init/discord.ts";
+import {emitWebhookEvent} from "../init/webhook.ts";
 import {getMust} from "../config.ts";
 import Discussion, {threadToTags} from "../models/discussion.ts";
 
@@ -32,6 +33,12 @@ export default (): void => {
             discussion.name = newThread.name;
             discussion.tags = threadToTags(newThread);
             await discussion.save();
+
+            void emitWebhookEvent("thread.updated", {
+                id: discussion.id,
+                discussionId: discussion.id,
+                data: {name: discussion.name, tags: discussion.tags},
+            });
         },
     );
 };

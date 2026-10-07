@@ -11,6 +11,7 @@ import User, {memberToUser} from "../models/user.ts";
 import Member from "../models/member.ts";
 import Soul from "../models/soul.ts";
 import {useSequelize} from "../init/sequelize.ts";
+import {emitWebhookEvent} from "../init/webhook.ts";
 
 const client = useClient();
 const guildId = getMust("DISCORD_GUILD_ID");
@@ -66,6 +67,12 @@ async function syncMessage(message: Message): Promise<void> {
                     transaction: t,
                 });
             }
+        });
+
+        void emitWebhookEvent("message.created", {
+            id: message.id,
+            discussionId: message.channelId,
+            data: {userId: message.author.id},
         });
     } catch (error) {
         console.error("Failed to sync message:", error);

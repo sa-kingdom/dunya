@@ -45,6 +45,25 @@ export function signInternalRequest(
 }
 
 /**
+ * Compute the hex HMAC-SHA256 signature of an outbound webhook delivery.
+ * The signed message mirrors the internal request format:
+ * "{timestamp}\nPOST\n{body}".
+ * @param timestamp - Unix timestamp (seconds) of the delivery.
+ * @param body - Raw JSON request body string.
+ * @param secret - Subscription-specific secret key.
+ * @returns Hex-encoded signature.
+ */
+export function signWebhookDelivery(
+    timestamp: number,
+    body: string,
+    secret: string = getInternalHmacSecret(),
+): string {
+    return createHmac("sha256", secret)
+        .update(`${timestamp}\nPOST\n${body}`)
+        .digest("hex");
+}
+
+/**
  * Verify the HMAC signature headers on an internal request.
  * @param request - Incoming request carrying X-Timestamp and X-Signature.
  * @returns A rejection Response when verification fails, otherwise null.

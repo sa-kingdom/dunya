@@ -1,5 +1,6 @@
 import {Events, ChannelType, AnyThreadChannel} from "discord.js";
 import {useClient} from "../init/discord.ts";
+import {emitWebhookEvent} from "../init/webhook.ts";
 import {getMust} from "../config.ts";
 import Discussion from "../models/discussion.ts";
 
@@ -24,6 +25,13 @@ export default (): void => {
             return;
         }
 
+        const name = discussion.name;
         await discussion.destroy();
+
+        void emitWebhookEvent("thread.deleted", {
+            id: discussion.id,
+            discussionId: discussion.id,
+            data: {name},
+        });
     });
 };
