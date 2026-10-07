@@ -16,6 +16,7 @@ import User from "../models/user.ts";
 import { FlarumDiscussion, FlarumPost, FlarumTag, FlarumUser } from "../models/flarum/index.ts";
 import { flarumToDiscordMarkdown } from "../utils/flarumFormatter.ts";
 import { verifyInternalRequest } from "../utils/hmac.ts";
+import { searchDiscussions, searchPosts } from "../utils/search.ts";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -289,6 +290,76 @@ router.get("/feed", async (request): Promise<Response> => {
 });
 
 /**
+ * GET /discussions/search
+ * Full-text search over synced Discord posts (content) and discussion
+ * titles, ranked by MySQL FULLTEXT relevance.
+ * Query params: q (required), type ("posts" | "discussions"),
+ * discussionId (posts only), limit, offset.
+ */
+router.get("/search", async (request): Promise<Response> => {
+    const query = request.query;
+    const keywords = String(query.q ?? query.query ?? "").trim();
+    if (!keywords) {
+        return jsonResponse({ error: "Search query (q) is required" }, StatusCodes.BAD_REQUEST);
+    }
+
+    const type = String(query.type ?? "posts");
+    if (type !== "posts" && type !== "discussions") {
+        return jsonResponse(
+            { error: "type must be either \"posts\" or \"discussions\"" },
+            StatusCodes.BAD_REQUEST,
+        );
+    }
+
+    const discussionId = query.discussionId ? String(query.discussionId) : null;
+    const limit = query.limit ? Math.min(Math.max(Number(query.limit), 1), MAX_PAGE_SIZE) : PAGE_SIZE;
+    const offset = query.offset ? Math.max(Number(query.offset), 0) : 0;
+
+    if (type === "discussions") {
+        const results = await searchDiscussions(keywords, { limit, offset });
+        const items = results.map((row) => ({
+            id: row.id,
+            source: "discord" as const,
+            name: row.name,
+            authorId: row.userId,
+            messageCount: row.messageCount ?? 0,
+            memberCount: row.memberCount ?? 0,
+            score: row.score,
+            createdAt: toIso(row.createdAt) ?? "",
+            updatedAt: toIso(row.updatedAt) ?? "",
+        }));
+        return jsonResponse({
+            query: keywords,
+            type,
+            items,
+            nextOffset: items.length >= limit ? offset + items.length : null,
+        });
+    }
+
+    const results = await searchPosts(keywords, { discussionId, limit, offset });
+    const userIds = Array.from(new Set(results.map((row) => row.userId).filter(Boolean) as string[]));
+    const users = userIds.length > 0 ? await User.findAll({ where: { id: userIds } }) : [];
+    const userMap = new Map(users.map((u) => [u.id, u.get({ plain: true }) as Record<string, unknown>]));
+    const items = results.map((row) => ({
+        id: row.id,
+        content: row.content,
+        authorId: row.userId,
+        author: mapDiscordAuthor(row.userId ? userMap.get(row.userId) ?? null : null),
+        discussionId: row.discussionId,
+        discussionName: row.discussionName,
+        score: row.score,
+        createdAt: toIso(row.createdAt) ?? "",
+    }));
+
+    return jsonResponse({
+        query: keywords,
+        type,
+        items,
+        nextOffset: items.length >= limit ? offset + items.length : null,
+    });
+});
+
+/**
  * Resolve `<@user>` and `<@&role>` mentions in synced post content using the
  * Member and Role tables, leaving a raw markdown string for the consumer.
  * @param content - Raw Discord post content.
@@ -310,6 +381,50 @@ function resolveMentions(
         return name ? `@${escapeMarkdown(name)}` : `@${UNKNOWN_ROLE}`;
     });
     return text;
+}
+
+/**
+ * Build post payloads for synced Discord posts, resolving `<@user>` and
+ * `<@&role>` mentions in content via the Member and Role tables.
+ * @param rawPosts - Plain post records including joined user and media rows.
+ * @returns Post payloads with resolved mention names.
+ */
+async function buildPostPayloads(
+    rawPosts: Record<string, unknown>[],
+): Promise<PostPayload[]> {
+    // Collect all unique mention IDs across all posts for batch retrieval
+    const memberIds = new Set<string>();
+    const roleIds = new Set<string>();
+    for (const post of rawPosts) {
+        const content = post.content as string | null;
+        if (content) {
+            for (const match of content.matchAll(MENTION_USER_REGEX)) {
+                memberIds.add(match[1]);
+            }
+            for (const match of content.matchAll(MENTION_ROLE_REGEX)) {
+                roleIds.add(match[1]);
+            }
+        }
+    }
+
+    // Fetch member and role names from database
+    const [members, roles] = await Promise.all([
+        memberIds.size > 0 ? Member.findAll({ where: { id: Array.from(memberIds) } }) : [],
+        roleIds.size > 0 ? Role.findAll({ where: { id: Array.from(roleIds) } }) : [],
+    ]);
+
+    const memberMap = new Map(members.map((m) => [m.id, m.displayName]));
+    const roleMap = new Map(roles.map((r) => [r.id, r.name]));
+
+    return rawPosts.map((post) => ({
+        id: String(post.id),
+        content: post.content ? resolveMentions(post.content as string, memberMap, roleMap) : "",
+        authorId: post.userId != null ? String(post.userId) : null,
+        author: mapDiscordAuthor(post.user as Record<string, unknown> | null),
+        media: (post.media as Record<string, unknown>[] | null) ?? [],
+        createdAt: toIso(post.createdAt) ?? "",
+        updatedAt: toIso(post.updatedAt) ?? "",
+    }));
 }
 
 /**
@@ -341,42 +456,51 @@ router.get("/discord/:id", async (request): Promise<Response> => {
     const raw = discussion.get({ plain: true }) as Record<string, unknown>;
     const payload = mapDiscordDiscussion(raw);
     const rawPosts = Array.isArray(raw.posts) ? (raw.posts as Record<string, unknown>[]) : [];
-
-    // Collect all unique mention IDs across all posts for batch retrieval
-    const memberIds = new Set<string>();
-    const roleIds = new Set<string>();
-    for (const post of rawPosts) {
-        const content = post.content as string | null;
-        if (content) {
-            for (const match of content.matchAll(MENTION_USER_REGEX)) {
-                memberIds.add(match[1]);
-            }
-            for (const match of content.matchAll(MENTION_ROLE_REGEX)) {
-                roleIds.add(match[1]);
-            }
-        }
-    }
-
-    // Fetch member and role names from database
-    const [members, roles] = await Promise.all([
-        memberIds.size > 0 ? Member.findAll({ where: { id: Array.from(memberIds) } }) : [],
-        roleIds.size > 0 ? Role.findAll({ where: { id: Array.from(roleIds) } }) : [],
-    ]);
-
-    const memberMap = new Map(members.map((m) => [m.id, m.displayName]));
-    const roleMap = new Map(roles.map((r) => [r.id, r.name]));
-
-    payload.posts = rawPosts.map((post) => ({
-        id: String(post.id),
-        content: post.content ? resolveMentions(post.content as string, memberMap, roleMap) : "",
-        authorId: post.userId != null ? String(post.userId) : null,
-        author: mapDiscordAuthor(post.user as Record<string, unknown> | null),
-        media: (post.media as Record<string, unknown>[] | null) ?? [],
-        createdAt: toIso(post.createdAt) ?? "",
-        updatedAt: toIso(post.updatedAt) ?? "",
-    }));
+    payload.posts = await buildPostPayloads(rawPosts);
 
     return jsonResponse(payload);
+});
+
+/**
+ * GET /discussions/discord/:id/posts
+ * Cursor-paginated posts of a synced Discord discussion, newest first.
+ * The cursor is a post ID (Discord snowflake, lexicographically ordered).
+ */
+router.get("/discord/:id/posts", async (request): Promise<Response> => {
+    const discussionId = request.params.id;
+    if (!discussionId) {
+        return jsonResponse({ error: "Discussion ID is required" }, StatusCodes.BAD_REQUEST);
+    }
+
+    const discussion = await Discussion.findByPk(discussionId);
+    if (!discussion) {
+        return jsonResponse({ error: "Discussion not found" }, StatusCodes.NOT_FOUND);
+    }
+
+    const query = request.query;
+    const before = query.before ? String(query.before) : null;
+    const limit = query.limit ? Math.min(Math.max(Number(query.limit), 1), MAX_PAGE_SIZE) : PAGE_SIZE;
+
+    const where: Record<string, unknown> = { discussionId };
+    if (before) {
+        where.id = { [Op.lt]: before };
+    }
+
+    const posts = await Post.findAll({
+        where,
+        order: [["id", "DESC"]],
+        limit,
+        include: [User, Media],
+    });
+    const items = await buildPostPayloads(
+        posts.map((post) => post.get({ plain: true }) as Record<string, unknown>),
+    );
+
+    const last = items[items.length - 1];
+    return jsonResponse({
+        items,
+        nextBefore: items.length >= limit && last ? last.id : null,
+    });
 });
 
 /**
