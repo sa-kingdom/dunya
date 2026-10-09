@@ -1,5 +1,6 @@
 import {Events, ChannelType, Message, PartialMessage} from "discord.js";
 import {useClient} from "../init/discord.ts";
+import {emitWebhookEvent} from "../init/webhook.ts";
 import {getMust} from "../config.ts";
 import Post from "../models/post.ts";
 import Member from "../models/member.ts";
@@ -42,6 +43,12 @@ export default (): void => {
             }
 
             await post.save();
+
+            void emitWebhookEvent("message.updated", {
+                id: post.id,
+                discussionId: post.discussionId,
+                data: {content: post.content},
+            });
         },
     );
 };

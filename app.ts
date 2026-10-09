@@ -45,6 +45,8 @@ const routerNames: string[] = [
     "root",
     "chat",
     "discussions",
+    "posts",
+    "media",
 ];
 
 // Load routes

@@ -1,5 +1,6 @@
 import {Events, ChannelType, AnyThreadChannel} from "discord.js";
 import {useClient} from "../init/discord.ts";
+import {emitWebhookEvent} from "../init/webhook.ts";
 import {getMust} from "../config.ts";
 import Discussion, {threadToDiscussion} from "../models/discussion.ts";
 
@@ -20,5 +21,11 @@ export default (): void => {
         }
 
         await Discussion.create(threadToDiscussion(thread));
+
+        void emitWebhookEvent("thread.created", {
+            id: thread.id,
+            discussionId: thread.id,
+            data: {name: thread.name, userId: thread.ownerId},
+        });
     });
 };

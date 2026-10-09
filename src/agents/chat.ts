@@ -27,6 +27,7 @@ import {
     createCodeExecutionTool,
     createKnowledgeRetrievalTool,
     createDiscussionGetHotTopics,
+    createDiscussionSearchTool,
 } from "./tools/index.ts";
 
 // Define the system prompt with a clear and authoritative persona for the agent
@@ -63,6 +64,7 @@ const toolsArray = [
     createCodeExecutionTool(),
     createKnowledgeRetrievalTool(),
     createDiscussionGetHotTopics(),
+    createDiscussionSearchTool(),
 ];
 
 // Define tools for agent capabilities

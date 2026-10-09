@@ -5,6 +5,7 @@ import {useSequelize} from "../../init/sequelize.ts";
 import Discussion from "../../models/discussion.ts";
 import Post from "../../models/post.ts";
 import User from "../../models/user.ts";
+import {searchDiscussions, searchPosts} from "../../utils/search.ts";
 
 interface HotTopic {
     id: string;
@@ -16,6 +17,8 @@ interface HotTopic {
     boards: string[];
     authorName: string | null;
 }
+
+const SEARCH_SNIPPET_LENGTH = 160;
 
 /**
  * Aggregate recent post activity per discussion from the synced database.
@@ -148,6 +151,89 @@ export function createDiscussionGetHotTopics(): DynamicStructuredTool {
             } catch (error: unknown) {
                 console.error("discussion_get_hot_topics failed:", error);
                 return `Failed to get hot topics: ${
+                    error instanceof Error ? error.message : String(error)
+                }`;
+            }
+        },
+    });
+}
+
+/**
+ * Build a readable snippet from a raw post content string.
+ * @param content - Raw post content.
+ * @returns Single-line snippet trimmed to SEARCH_SNIPPET_LENGTH characters.
+ */
+function buildSnippet(content: string): string {
+    return content.replace(/\s+/g, " ").trim().slice(0, SEARCH_SNIPPET_LENGTH);
+}
+
+/**
+ * Tool for full-text search over synced forum posts and thread titles.
+ */
+export function createDiscussionSearchTool(): DynamicStructuredTool {
+    return new DynamicStructuredTool({
+        name: "discussion_search",
+        description:
+            "Full-text search over the synced forum database for posts " +
+            "(message content) and discussion thread titles. Use this when " +
+            "the user wants to find past discussions or messages containing " +
+            "specific keywords, instead of browsing Discord channels.",
+        schema: z.object({
+            query: z.string()
+                .describe("Keywords to search for in posts and thread titles"),
+            discussionId: z.string().nullable().default(null)
+                .describe("Optional thread ID to restrict the search to"),
+            limit: z.number().nullable().default(5)
+                .describe("Maximum number of results to return"),
+        }),
+        func: async ({query, discussionId, limit}) => {
+            const keywords = query.trim();
+            if (!keywords) {
+                return "Search query is empty.";
+            }
+            const maxItems = Math.min(Math.max(limit ?? 5, 1), 20);
+            console.info("[tool] discussion_search", {
+                query: keywords,
+                discussionId: discussionId ?? null,
+                limit: maxItems,
+            });
+            try {
+                const postsPromise = searchPosts(keywords, {
+                    discussionId: discussionId ?? null,
+                    limit: maxItems,
+                });
+                const discussions = await searchDiscussions(keywords, {
+                    limit: maxItems,
+                });
+                const posts = await postsPromise;
+
+                const parts: string[] = [];
+                if (discussions.length > 0) {
+                    const titleLines = discussions.map((d, index) =>
+                        `${index + 1}. ${d.name} (thread ID: ${d.id})`,
+                    );
+                    parts.push(
+                        `Threads with matching titles:\n${titleLines.join("\n")}`,
+                    );
+                }
+                if (posts.length > 0) {
+                    const postLines = posts.map((p, index) => {
+                        const snippet = buildSnippet(p.content);
+                        return `${index + 1}. ${p.discussionName} — ` +
+                            `"${snippet}" (thread ID: ${p.discussionId}, ` +
+                            `post ID: ${p.id})`;
+                    });
+                    parts.push(
+                        `Messages matching "${keywords}":\n${postLines.join("\n")}`,
+                    );
+                }
+                if (parts.length === 0) {
+                    return `No forum posts or threads match "${keywords}".`;
+                }
+                return parts.join("\n\n");
+            } catch (error: unknown) {
+                console.error("discussion_search failed:", error);
+                return `Failed to search forum discussions: ${
                     error instanceof Error ? error.message : String(error)
                 }`;
             }
