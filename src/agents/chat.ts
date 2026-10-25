@@ -78,6 +78,30 @@ export const agent = createAgent({
     systemPrompt,
 });
 
+// Tools that must never be reachable from the unauthenticated web chat:
+// live Discord guild access and the shared persistent persona state.
+const webExcludedTools = new Set([
+    "discord_get_guilds",
+    "discord_get_text_channels",
+    "discord_get_messages",
+    "discord_send_messages",
+    "discord_channel_search",
+    "soul_read",
+    "soul_write",
+    "soul_append",
+    "soul_find",
+    "soul_replace",
+    "soul_clear",
+]);
+
+// Restricted agent instance for the anonymous web chat channel.
+export const webChatAgent = createAgent({
+    model,
+    tools: tools.filter((tool) => !webExcludedTools.has(tool.name)),
+    checkpointer,
+    systemPrompt,
+});
+
 /**
  * Chat context interface for user and channel details.
  */
@@ -144,10 +168,14 @@ export async function chatWithAI(
     const promptWithContext = toPromptWithContext(textPrompt, promptContext);
     const config = {configurable: {thread_id: threadId}};
 
-    const initialState = await agent.graph.getState(config);
+    // Select the agent instance by channel type: the anonymous web chat
+    // runs the restricted instance without Discord and persona tools.
+    const activeAgent = context.channelType === "chat" ? webChatAgent : agent;
+
+    const initialState = await activeAgent.graph.getState(config);
     const initialMessagesCount = initialState.values?.messages?.length || 0;
 
-    const result = await agent.invoke(
+    const result = await activeAgent.invoke(
         {messages: [{role: "user", content: promptWithContext}]},
         config,
     );
